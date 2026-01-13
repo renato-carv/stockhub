@@ -35,7 +35,7 @@ html {
 }
 
 body {
-  font-family: system-ui, sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   line-height: 1.5;
   background: var(--background);
   color: var(--text);
