@@ -1,0 +1,491 @@
+<header class="header">
+  <div class="header-content">
+    <a href="#hero" class="logo">
+      <img src="logo.png" alt="StockHub Logo" />
+      <span>StockHub</span>
+    </a>
+    <nav class="nav">
+      <a href="#how-it-works">Como funciona</a>
+      <a href="#ai">IA</a>
+      <a href="#features">Recursos</a>
+      <a href="#testimonials">Clientes</a>
+      <a href="#pricing">Preços</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="header-actions">
+      <app-theme-toggle></app-theme-toggle>
+      <button class="btn-ghost">Entrar</button>
+      <button class="btn-primary">Começar grátis</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <div class="badge">
+        <lucide-icon [img]="Sparkles" [size]="14"></lucide-icon>
+        Agora com IA integrada
+      </div>
+      <h1>Controle total do seu estoque em um só lugar</h1>
+      <p>
+        Automatize processos, reduza perdas e tome decisões baseadas em dados. A plataforma completa
+        para empresas que levam estoque a sério.
+      </p>
+      <div class="hero-actions">
+        <app-button variant="primary" size="lg">Começar gratuitamente</app-button>
+        <app-button variant="outline" size="lg" (clicked)="onDemo()">
+          <lucide-icon [img]="Play" [size]="18"></lucide-icon>
+          Ver demonstração
+        </app-button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">2.500+</span>
+          <span class="stat-label">Empresas ativas</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">99.9%</span>
+          <span class="stat-label">Uptime garantido</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">50M+</span>
+          <span class="stat-label">Itens gerenciados</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="dashboard-preview">
+        <div class="preview-topbar">
+          <div class="preview-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="preview-title">StockHub Dashboard</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-sidebar">
+            <div class="sidebar-item active"></div>
+            <div class="sidebar-item"></div>
+            <div class="sidebar-item"></div>
+            <div class="sidebar-item"></div>
+          </div>
+          <div class="preview-main">
+            <div class="preview-metrics">
+              <div class="metric-card">
+                <span class="metric-label">Produtos</span>
+                <span class="metric-value">1.234</span>
+                <span class="metric-change positive">+12%</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Em estoque</span>
+                <span class="metric-value">8.567</span>
+                <span class="metric-change positive">+5%</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Alertas</span>
+                <span class="metric-value">23</span>
+                <span class="metric-change negative">+3</span>
+              </div>
+            </div>
+            <div class="preview-chart">
+              <div class="chart-header">Movimentações (últimos 7 dias)</div>
+              <div class="chart-bars">
+                <div class="bar" style="--height: 60%"></div>
+                <div class="bar" style="--height: 80%"></div>
+                <div class="bar" style="--height: 45%"></div>
+                <div class="bar" style="--height: 90%"></div>
+                <div class="bar" style="--height: 70%"></div>
+                <div class="bar" style="--height: 55%"></div>
+                <div class="bar" style="--height: 85%"></div>
+              </div>
+            </div>
+            <div class="preview-table">
+              <div class="table-header">
+                <span>Produto</span>
+                <span>SKU</span>
+                <span>Qtd</span>
+              </div>
+              <div class="table-row">
+                <span class="product-name"></span>
+                <span class="product-sku"></span>
+                <span class="product-qty"></span>
+              </div>
+              <div class="table-row">
+                <span class="product-name"></span>
+                <span class="product-sku"></span>
+                <span class="product-qty"></span>
+              </div>
+              <div class="table-row">
+                <span class="product-name"></span>
+                <span class="product-sku"></span>
+                <span class="product-qty"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- <section class="logos">
+    <p>Empresas que confiam no StockHub</p>
+    <div class="logos-grid">
+      <div class="logo-placeholder"></div>
+      <div class="logo-placeholder"></div>
+      <div class="logo-placeholder"></div>
+      <div class="logo-placeholder"></div>
+      <div class="logo-placeholder"></div>
+    </div>
+  </section> -->
+
+  <section id="how-it-works" class="how-it-works">
+    <div class="section-header">
+      <h2>Como funciona</h2>
+      <p>Comece a usar em minutos, não em semanas</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-icon">
+          <lucide-icon [img]="Users" [size]="40"></lucide-icon>
+        </div>
+        <h3>Crie sua conta</h3>
+        <p>Registre-se gratuitamente e configure sua organização e equipes em poucos cliques.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-icon">
+          <lucide-icon [img]="Package" [size]="40"></lucide-icon>
+        </div>
+        <h3>Cadastre produtos</h3>
+        <p>Adicione seus produtos com SKU, preços, estoque mínimo e máximo. Importe via Excel ou CSV.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-icon">
+          <lucide-icon [img]="Rocket" [size]="40"></lucide-icon>
+        </div>
+        <h3>Gerencie tudo</h3>
+        <p>Controle entradas, saídas e ajustes. Acompanhe o dashboard com alertas e insights em tempo real.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai" class="ai-section">
+    <div class="ai-content">
+      <div class="ai-text">
+        <div class="badge badge-ai">
+          <lucide-icon [img]="Brain" [size]="14"></lucide-icon>
+          Inteligência Artificial
+        </div>
+        <h2>IA que trabalha por você</h2>
+        <p>
+          Nossa inteligência artificial analisa padrões de consumo, prevê demandas e sugere
+          reposições antes que você fique sem estoque.
+        </p>
+        <ul class="ai-features">
+          <li>
+            <lucide-icon [img]="TrendingUp" [size]="20"></lucide-icon>
+            <div>
+              <strong>Previsão de demanda</strong>
+              <span>Antecipe necessidades com base em histórico e sazonalidade</span>
+            </div>
+          </li>
+          <li>
+            <lucide-icon [img]="Zap" [size]="20"></lucide-icon>
+            <div>
+              <strong>Reposição automática</strong>
+              <span>Sugestões inteligentes de compra no momento certo</span>
+            </div>
+          </li>
+          <li>
+            <lucide-icon [img]="Sparkles" [size]="20"></lucide-icon>
+            <div>
+              <strong>Detecção de anomalias</strong>
+              <span>Identifica padrões suspeitos e perdas em tempo real</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="ai-visual">
+        <div class="ai-card">
+          <div class="ai-card-header">
+            <lucide-icon [img]="Brain" [size]="20"></lucide-icon>
+            <span>Assistente IA</span>
+          </div>
+          <div class="ai-chat">
+            <div class="ai-message bot">
+              <p>
+                Detectei que o produto "Camiseta M Azul" terá ruptura em 5 dias baseado no histórico
+                de vendas.
+              </p>
+            </div>
+            <div class="ai-message bot">
+              <p>Recomendo fazer pedido de 150 unidades ao fornecedor ABC Textil.</p>
+            </div>
+            <div class="ai-suggestion">
+              <button class="btn-ai">Criar pedido automaticamente</button>
+              <button class="btn-ai-outline">Ver análise completa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="features">
+    <div class="section-header">
+      <h2>Recursos que fazem a diferença</h2>
+      <p>Ferramentas pensadas para otimizar cada etapa da sua gestão de estoque</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <lucide-icon [img]="Package" [size]="28"></lucide-icon>
+        </div>
+        <h3>Gestão de Produtos</h3>
+        <p>
+          Cadastre produtos com categorias, variações, SKUs e controle de estoque mínimo com alertas
+          automáticos.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <lucide-icon [img]="BarChart3" [size]="28"></lucide-icon>
+        </div>
+        <h3>Relatórios e Analytics</h3>
+        <p>Dashboards em tempo real com métricas de giro, valorização e previsão de demanda.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <lucide-icon [img]="ArrowRightLeft" [size]="28"></lucide-icon>
+        </div>
+        <h3>Movimentações</h3>
+        <p>
+          Registre entradas, saídas e transferências com rastreabilidade completa e histórico
+          detalhado.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <lucide-icon [img]="Users" [size]="28"></lucide-icon>
+        </div>
+        <h3>Controle de Acesso</h3>
+        <p>
+          Gerencie equipes com permissões granulares por função, filial ou categoria de produto.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <lucide-icon [img]="Bell" [size]="28"></lucide-icon>
+        </div>
+        <h3>Alertas Inteligentes</h3>
+        <p>Notificações automáticas para estoque baixo, vencimentos e anomalias de movimentação.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <lucide-icon [img]="Shield" [size]="28"></lucide-icon>
+        </div>
+        <h3>Segurança</h3>
+        <p>Dados criptografados, backups automáticos e conformidade com LGPD.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="testimonials" class="testimonials">
+    <div class="section-header">
+      <h2>O que nossos clientes dizem</h2>
+      <p>Histórias reais de empresas que transformaram sua gestão de estoque</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-author">
+          <div class="author-avatar">MR</div>
+          <div class="author-info">
+            <strong>Marina Rodrigues</strong>
+            <span>Gerente de Operações, FarmaBem</span>
+          </div>
+        </div>
+        <p class="testimonial-text">
+          "Reduzimos 40% das perdas por vencimento após implementar os alertas inteligentes. A IA
+          realmente entende nosso negócio."
+        </p>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-author">
+          <div class="author-avatar">CS</div>
+          <div class="author-info">
+            <strong>Carlos Santos</strong>
+            <span>Diretor Comercial, TechParts</span>
+          </div>
+        </div>
+        <p class="testimonial-text">
+          "A previsão de demanda nos ajudou a negociar melhor com fornecedores. Economizamos R$50mil
+          no primeiro trimestre."
+        </p>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-author">
+          <div class="author-avatar">AF</div>
+          <div class="author-info">
+            <strong>Ana Ferreira</strong>
+            <span>CEO, ModaStyle</span>
+          </div>
+        </div>
+        <p class="testimonial-text">
+          "Migrar do Excel foi a melhor decisão. Agora tenho visibilidade em tempo real de todas as
+          12 lojas da rede."
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" class="pricing">
+    <div class="section-header">
+      <h2>Planos para cada momento</h2>
+      <p>Comece grátis e escale conforme cresce</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3>Starter</h3>
+          <p>Para pequenos negócios</p>
+        </div>
+        <div class="pricing-price">
+          <span class="price">Grátis</span>
+          <span class="period">para sempre</span>
+        </div>
+        <ul class="pricing-features">
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Até 500 produtos</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> 1 usuário</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Relatórios básicos</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Suporte por email</li>
+        </ul>
+        <button class="btn-outline btn-full">Começar grátis</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Mais popular</div>
+        <div class="pricing-header">
+          <h3>Pro</h3>
+          <p>Para empresas em crescimento</p>
+        </div>
+        <div class="pricing-price">
+          <span class="price">R$149</span>
+          <span class="period">/mês</span>
+        </div>
+        <ul class="pricing-features">
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Produtos ilimitados</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Até 10 usuários</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> IA para previsões</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Integrações</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Suporte prioritário</li>
+        </ul>
+        <button class="btn-primary btn-full">Teste grátis 14 dias</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <h3>Enterprise</h3>
+          <p>Para grandes operações</p>
+        </div>
+        <div class="pricing-price">
+          <span class="price">Sob consulta</span>
+        </div>
+        <ul class="pricing-features">
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Tudo do Pro</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Usuários ilimitados</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Multi-filiais</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> API dedicada</li>
+          <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Gerente de conta</li>
+        </ul>
+        <button class="btn-outline btn-full">Falar com vendas</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq">
+    <div class="section-header">
+      <h2>Perguntas frequentes</h2>
+      <p>Tire suas dúvidas sobre o StockHub</p>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item" [class.open]="isFaqOpen(0)">
+        <button class="faq-question" (click)="toggleFaq(0)">
+          <span>Posso importar dados do meu sistema atual?</span>
+          <lucide-icon [img]="ChevronDown" [size]="20"></lucide-icon>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Sim! Suportamos importação de arquivos Excel, CSV e integrações diretas com os
+            principais ERPs do mercado como SAP, TOTVS e Bling.
+          </p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="isFaqOpen(1)">
+        <button class="faq-question" (click)="toggleFaq(1)">
+          <span>A IA funciona para qualquer tipo de negócio?</span>
+          <lucide-icon [img]="ChevronDown" [size]="20"></lucide-icon>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Nossa IA aprende com os padrões do seu negócio específico. Quanto mais dados históricos,
+            melhores as previsões. Funciona para varejo, indústria, distribuição e serviços.
+          </p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="isFaqOpen(2)">
+        <button class="faq-question" (click)="toggleFaq(2)">
+          <span>Meus dados estão seguros?</span>
+          <lucide-icon [img]="ChevronDown" [size]="20"></lucide-icon>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Absolutamente. Utilizamos criptografia AES-256, servidores no Brasil com certificação
+            ISO 27001, backups automáticos e estamos em conformidade com a LGPD.
+          </p>
+        </div>
+      </div>
+      <div class="faq-item" [class.open]="isFaqOpen(3)">
+        <button class="faq-question" (click)="toggleFaq(3)">
+          <span>Posso cancelar a qualquer momento?</span>
+          <lucide-icon [img]="ChevronDown" [size]="20"></lucide-icon>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Sim, não há fidelidade. Você pode fazer downgrade para o plano gratuito ou cancelar
+            quando quiser. Seus dados ficam disponíveis para exportação por 30 dias.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cta" class="cta-section">
+    <div class="cta-content">
+      <h2>Pronto para modernizar sua gestão de estoque?</h2>
+      <p>Comece gratuitamente. Sem cartão de crédito.</p>
+      <div class="cta-actions">
+        <button class="btn-primary btn-large">Criar conta grátis</button>
+        <button class="btn-ghost btn-large">Falar com vendas</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <img src="logo.png" alt="StockHub" />
+      <span>StockHub</span>
+    </div>
+    <nav class="footer-links">
+      <a href="#">Termos</a>
+      <a href="#">Privacidade</a>
+      <a href="#">Contato</a>
+    </nav>
+    <p>© 2025 StockHub. Todos os direitos reservados.</p>
+  </div>
+</footer>

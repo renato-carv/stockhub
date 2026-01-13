@@ -1,0 +1,7 @@
+<button class="toggle" (click)="toggle()" [attr.aria-label]="isDark() ? 'Ativar tema claro' : 'Ativar tema escuro'">
+  @if (isDark()) {
+    <lucide-icon [img]="Sun" [size]="18"></lucide-icon>
+  } @else {
+    <lucide-icon [img]="Moon" [size]="18"></lucide-icon>
+  }
+</button>
