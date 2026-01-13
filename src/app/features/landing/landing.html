@@ -15,7 +15,7 @@
     <div class="header-actions">
       <app-theme-toggle></app-theme-toggle>
       <a routerLink="/login" class="btn-ghost">Entrar</a>
-      <button class="btn-primary">Começar grátis</button>
+      <a routerLink="/register" class="btn-primary">Começar grátis</a>
     </div>
   </div>
 </header>
@@ -33,7 +33,7 @@
         para empresas que levam estoque a sério.
       </p>
       <div class="hero-actions">
-        <app-button variant="primary" size="lg">Começar gratuitamente</app-button>
+        <a routerLink="/register" class="btn-primary btn-lg">Começar gratuitamente</a>
         <app-button variant="outline" size="lg" (clicked)="onDemo()">
           <lucide-icon [img]="Play" [size]="18"></lucide-icon>
           Ver demonstração
@@ -365,7 +365,7 @@
           <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Relatórios básicos</li>
           <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Suporte por email</li>
         </ul>
-        <button class="btn-outline btn-full">Começar grátis</button>
+        <a routerLink="/register" class="btn-outline btn-full">Começar grátis</a>
       </div>
       <div class="pricing-card featured">
         <div class="pricing-badge">Mais popular</div>
@@ -384,7 +384,7 @@
           <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Integrações</li>
           <li><lucide-icon [img]="Check" [size]="16"></lucide-icon> Suporte prioritário</li>
         </ul>
-        <button class="btn-primary btn-full">Teste grátis 14 dias</button>
+        <a routerLink="/register" class="btn-primary btn-full">Teste grátis 14 dias</a>
       </div>
       <div class="pricing-card">
         <div class="pricing-header">
@@ -468,7 +468,7 @@
       <h2>Pronto para modernizar sua gestão de estoque?</h2>
       <p>Comece gratuitamente. Sem cartão de crédito.</p>
       <div class="cta-actions">
-        <button class="btn-primary btn-large">Criar conta grátis</button>
+        <a routerLink="/register" class="btn-primary btn-large">Criar conta grátis</a>
         <button class="btn-ghost btn-large">Falar com vendas</button>
       </div>
     </div>

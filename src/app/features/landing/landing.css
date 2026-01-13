@@ -75,7 +75,9 @@
   font-size: 0.9375rem;
   font-weight: 500;
   cursor: pointer;
-
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .btn-primary:hover {
@@ -112,6 +114,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  text-decoration: none;
 }
 
 .btn-outline:hover {
@@ -119,7 +122,8 @@
   border-color: var(--text-muted);
 }
 
-.btn-large {
+.btn-large,
+.btn-lg {
   padding: 0.875rem 1.75rem;
   font-size: 1rem;
 }
