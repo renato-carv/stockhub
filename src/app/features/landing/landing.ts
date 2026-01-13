@@ -21,10 +21,11 @@ import {
   Settings,
   Rocket,
 } from 'lucide-angular';
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'app-landing',
-  imports: [LucideAngularModule, ThemeToggle, Button],
+  imports: [LucideAngularModule, ThemeToggle, Button, RouterLink],
   templateUrl: './landing.html',
   styleUrl: './landing.css',
 })

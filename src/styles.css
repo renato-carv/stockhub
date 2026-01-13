@@ -18,6 +18,8 @@ html {
   --border: #e2e8f0;
   --text: #0f172a;
   --text-muted: #64748b;
+  --danger: #dc2626;
+  --success: #16a34a;
 }
 
 [data-theme="dark"] {
@@ -28,6 +30,8 @@ html {
   --border: #252538;
   --text: #f0f0f0;
   --text-muted: #8888a0;
+  --danger: #ef4444;
+  --success: #22c55e;
 }
 
 body {
