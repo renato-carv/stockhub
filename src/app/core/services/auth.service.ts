@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 interface User {
@@ -51,7 +53,7 @@ export class AuthService {
           this.user.set(response.user);
           this.isAuthenticated.set(true);
           this.isLoading.set(false);
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/home']);
         },
         error: (err) => {
           this.isLoading.set(false);
@@ -83,21 +85,22 @@ export class AuthService {
       });
   }
 
-  checkAuth(): void {
-    this.http
-      .get<{ user: User }>(`${this.apiUrl}/auth/me`, {
+  checkAuth(): Observable<User | null> {
+    return this.http
+      .get<User>(`${this.apiUrl}/auth/me`, {
         withCredentials: true,
       })
-      .subscribe({
-        next: (response) => {
-          this.user.set(response.user);
+      .pipe(
+        tap((user) => {
+          this.user.set(user);
           this.isAuthenticated.set(true);
-        },
-        error: () => {
+        }),
+        catchError(() => {
           this.user.set(null);
           this.isAuthenticated.set(false);
-        },
-      });
+          return of(null);
+        })
+      );
   }
 
   register(credentials: RegisterCredentials): void {
@@ -113,7 +116,7 @@ export class AuthService {
           this.user.set(response.user);
           this.isAuthenticated.set(true);
           this.isLoading.set(false);
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/home']);
         },
         error: (err) => {
           this.isLoading.set(false);

@@ -1,0 +1,487 @@
+<div class="home-container">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"/>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span>StockHub</span>
+      </div>
+    </div>
+    <div class="header-right">
+      @if (authService.user()) {
+        <div class="user-menu">
+          <span class="user-name">{{ authService.user()?.name }}</span>
+          <app-theme-toggle />
+          <button class="btn-logout" (click)="logout()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" x2="9" y1="12" y2="12"/>
+            </svg>
+            Sair
+          </button>
+        </div>
+      }
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Onboarding: Quando não tem org/team -->
+    @if (!showDashboard() && !organizationService.isLoading()) {
+      <div class="onboarding-container">
+        <!-- Welcome Step -->
+        @if (onboardingStep() === 'welcome') {
+          <div class="onboarding-card welcome-card">
+            <div class="welcome-animation">
+              <div class="floating-icons">
+                <div class="icon icon-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+                </div>
+                <div class="icon icon-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                </div>
+                <div class="icon icon-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+              </div>
+              <div class="welcome-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+            </div>
+            <h1>Bem-vindo ao StockHub!</h1>
+            <p class="welcome-subtitle">Gerencie seu estoque de forma inteligente e eficiente</p>
+            <p class="welcome-description">
+              Para começar, vamos configurar sua organização e equipe.
+              Isso levará apenas alguns minutos.
+            </p>
+            <button class="btn-primary btn-large" (click)="startOnboarding()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+              </svg>
+              Começar Configuração
+            </button>
+          </div>
+        }
+
+        <!-- Create Organization Step -->
+        @if (onboardingStep() === 'create-org') {
+          <div class="onboarding-card form-card">
+            <div class="step-indicator">
+              <div class="step active">1</div>
+              <div class="step-line"></div>
+              <div class="step">2</div>
+            </div>
+            <div class="form-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+                <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+                <path d="M10 6h4"/>
+                <path d="M10 10h4"/>
+                <path d="M10 14h4"/>
+                <path d="M10 18h4"/>
+              </svg>
+            </div>
+            <h2>Crie sua Organização</h2>
+            <p>Uma organização agrupa todas as suas equipes e recursos</p>
+
+            <form class="onboarding-form" (ngSubmit)="createOrganization()">
+              <div class="form-group">
+                <label for="orgName">Nome da Organização</label>
+                <input
+                  type="text"
+                  id="orgName"
+                  [(ngModel)]="orgForm.name"
+                  name="orgName"
+                  placeholder="Ex: Minha Empresa"
+                  (input)="generateSlug(orgForm.name, 'org')"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="orgSlug">Identificador (slug)</label>
+                <div class="slug-input">
+                  <span class="slug-prefix">stockhub.com/</span>
+                  <input
+                    type="text"
+                    id="orgSlug"
+                    [(ngModel)]="orgForm.slug"
+                    name="orgSlug"
+                    placeholder="minha-empresa"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="orgDescription">Descrição (opcional)</label>
+                <textarea
+                  id="orgDescription"
+                  [(ngModel)]="orgForm.description"
+                  name="orgDescription"
+                  placeholder="Uma breve descrição da sua organização"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="btn-primary btn-full"
+                [disabled]="isCreatingOrg() || !orgForm.name || !orgForm.slug"
+              >
+                @if (isCreatingOrg()) {
+                  <span class="spinner"></span>
+                  Criando...
+                } @else {
+                  Criar Organização
+                }
+              </button>
+            </form>
+          </div>
+        }
+
+        <!-- Create Team Step -->
+        @if (onboardingStep() === 'create-team') {
+          <div class="onboarding-card form-card">
+            <div class="step-indicator">
+              <div class="step completed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div class="step-line completed"></div>
+              <div class="step active">2</div>
+            </div>
+            <div class="form-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h2>Crie sua Equipe</h2>
+            <p>Equipes permitem organizar membros e gerenciar estoques separadamente</p>
+
+            <form class="onboarding-form" (ngSubmit)="createTeam()">
+              <div class="form-group">
+                <label for="teamName">Nome da Equipe</label>
+                <input
+                  type="text"
+                  id="teamName"
+                  [(ngModel)]="teamForm.name"
+                  name="teamName"
+                  placeholder="Ex: Estoque Principal"
+                  (input)="generateSlug(teamForm.name, 'team')"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="teamSlug">Identificador (slug)</label>
+                <input
+                  type="text"
+                  id="teamSlug"
+                  [(ngModel)]="teamForm.slug"
+                  name="teamSlug"
+                  placeholder="estoque-principal"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="teamDescription">Descrição (opcional)</label>
+                <textarea
+                  id="teamDescription"
+                  [(ngModel)]="teamForm.description"
+                  name="teamDescription"
+                  placeholder="Uma breve descrição da equipe"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="btn-primary btn-full"
+                [disabled]="isCreatingTeam() || !teamForm.name || !teamForm.slug"
+              >
+                @if (isCreatingTeam()) {
+                  <span class="spinner"></span>
+                  Criando...
+                } @else {
+                  Criar Equipe
+                }
+              </button>
+            </form>
+          </div>
+        }
+
+        <!-- Complete Step -->
+        @if (onboardingStep() === 'complete') {
+          <div class="onboarding-card complete-card">
+            <div class="success-animation">
+              <div class="success-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <div class="confetti">
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <h2>Tudo Pronto!</h2>
+            <p>Sua organização e equipe foram criadas com sucesso.</p>
+            <p class="complete-info">
+              <strong>{{ organizationService.currentOrganization()?.name }}</strong> /
+              <strong>{{ teamService.currentTeam()?.name }}</strong>
+            </p>
+            <button class="btn-primary btn-large" (click)="finishOnboarding()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"/>
+                <path d="m19 9-5 5-4-4-3 3"/>
+              </svg>
+              Ir para o Dashboard
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Dashboard: Quando tem org e team -->
+    @if (showDashboard()) {
+      <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="dashboard-subtitle">
+              {{ organizationService.currentOrganization()?.name }} / {{ teamService.currentTeam()?.name }}
+            </p>
+          </div>
+        </div>
+
+        @if (dashboardService.isLoading()) {
+          <div class="loading-state">
+            <div class="spinner-large"></div>
+            <p>Carregando dados...</p>
+          </div>
+        } @else if (dashboardService.dashboard()) {
+          <!-- Stats Cards -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m7.5 4.27 9 5.15"/>
+                  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ dashboardService.dashboard()?.stockOverview?.totalProducts || 0 }}</span>
+                <span class="stat-label">Total de Produtos</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ dashboardService.dashboard()?.stockOverview?.totalItems || 0 }}</span>
+                <span class="stat-label">Itens em Estoque</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon orange">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ dashboardService.dashboard()?.stockAlerts?.totalAlerts || 0 }}</span>
+                <span class="stat-label">Alertas de Estoque</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon purple">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ formatCurrency(dashboardService.dashboard()?.financial?.totalStockValue || 0) }}</span>
+                <span class="stat-label">Valor do Estoque</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Grid -->
+          <div class="content-grid">
+            <!-- Movements Summary -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Movimentações</h3>
+              </div>
+              <div class="card-body">
+                <div class="movements-summary">
+                  <div class="movement-item entry">
+                    <div class="movement-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14"/>
+                        <path d="m19 12-7 7-7-7"/>
+                      </svg>
+                    </div>
+                    <div class="movement-info">
+                      <span class="movement-value">{{ dashboardService.dashboard()?.movementsSummary?.totalEntries || 0 }}</span>
+                      <span class="movement-label">Entradas</span>
+                    </div>
+                    <span class="movement-qty">+{{ dashboardService.dashboard()?.movementsSummary?.itemsIn || 0 }} itens</span>
+                  </div>
+
+                  <div class="movement-item exit">
+                    <div class="movement-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19V5"/>
+                        <path d="m5 12 7-7 7 7"/>
+                      </svg>
+                    </div>
+                    <div class="movement-info">
+                      <span class="movement-value">{{ dashboardService.dashboard()?.movementsSummary?.totalExits || 0 }}</span>
+                      <span class="movement-label">Saídas</span>
+                    </div>
+                    <span class="movement-qty">-{{ dashboardService.dashboard()?.movementsSummary?.itemsOut || 0 }} itens</span>
+                  </div>
+
+                  <div class="movement-item adjustment">
+                    <div class="movement-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                      </svg>
+                    </div>
+                    <div class="movement-info">
+                      <span class="movement-value">{{ dashboardService.dashboard()?.movementsSummary?.totalAdjustments || 0 }}</span>
+                      <span class="movement-label">Ajustes</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="net-balance" [class.positive]="(dashboardService.dashboard()?.movementsSummary?.netBalance || 0) >= 0" [class.negative]="(dashboardService.dashboard()?.movementsSummary?.netBalance || 0) < 0">
+                  <span class="balance-label">Balanço Líquido</span>
+                  <span class="balance-value">
+                    {{ (dashboardService.dashboard()?.movementsSummary?.netBalance || 0) >= 0 ? '+' : '' }}{{ dashboardService.dashboard()?.movementsSummary?.netBalance || 0 }} itens
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stock Alerts -->
+            <div class="card">
+              <div class="card-header">
+                <h3>Alertas de Estoque</h3>
+                <span class="badge danger">{{ dashboardService.dashboard()?.stockAlerts?.totalAlerts || 0 }}</span>
+              </div>
+              <div class="card-body">
+                @if ((dashboardService.dashboard()?.stockAlerts?.outOfStock?.length || 0) === 0 && (dashboardService.dashboard()?.stockAlerts?.lowStock?.length || 0) === 0) {
+                  <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <p>Nenhum alerta no momento</p>
+                  </div>
+                } @else {
+                  <div class="alerts-list">
+                    @for (product of dashboardService.dashboard()?.stockAlerts?.outOfStock || []; track product.id) {
+                      <div class="alert-item critical">
+                        <div class="alert-badge">Sem estoque</div>
+                        <div class="alert-info">
+                          <span class="alert-name">{{ product.name }}</span>
+                          <span class="alert-sku">{{ product.sku }}</span>
+                        </div>
+                      </div>
+                    }
+                    @for (product of dashboardService.dashboard()?.stockAlerts?.lowStock || []; track product.id) {
+                      <div class="alert-item warning">
+                        <div class="alert-badge">Estoque baixo</div>
+                        <div class="alert-info">
+                          <span class="alert-name">{{ product.name }}</span>
+                          <span class="alert-detail">{{ product.currentStock }}/{{ product.minStock }} un.</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card card-full">
+              <div class="card-header">
+                <h3>Atividade Recente</h3>
+              </div>
+              <div class="card-body">
+                @if ((dashboardService.dashboard()?.recentActivity?.length || 0) === 0) {
+                  <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M12 8v4l3 3"/>
+                      <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    <p>Nenhuma atividade recente</p>
+                  </div>
+                } @else {
+                  <div class="activity-list">
+                    @for (activity of dashboardService.dashboard()?.recentActivity || []; track activity.id) {
+                      <div class="activity-item">
+                        <div class="activity-type" [ngClass]="getMovementTypeClass(activity.type)">
+                          {{ getMovementTypeLabel(activity.type) }}
+                        </div>
+                        <div class="activity-details">
+                          <span class="activity-product">{{ activity.productName }}</span>
+                          <span class="activity-meta">{{ activity.reason }} · {{ activity.userName }}</span>
+                        </div>
+                        <div class="activity-qty" [ngClass]="getMovementTypeClass(activity.type)">
+                          {{ activity.type === 'EXIT' ? '-' : '+' }}{{ activity.quantity }}
+                        </div>
+                        <div class="activity-time">
+                          {{ formatDate(activity.createdAt) }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (organizationService.isLoading()) {
+      <div class="loading-state">
+        <div class="spinner-large"></div>
+        <p>Carregando...</p>
+      </div>
+    }
+  </main>
+</div>
