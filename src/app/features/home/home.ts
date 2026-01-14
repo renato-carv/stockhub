@@ -5,13 +5,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { OrganizationService } from '../../core/services/organization.service';
 import { TeamService } from '../../core/services/team.service';
 import { DashboardService } from '../../core/services/dashboard.service';
-import { ThemeToggle } from '../../shared/components/theme-toggle/theme-toggle';
 
 type OnboardingStep = 'welcome' | 'create-org' | 'create-team' | 'complete';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, FormsModule, ThemeToggle],
+  imports: [CommonModule, FormsModule],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })

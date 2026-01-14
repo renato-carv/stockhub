@@ -1,0 +1,33 @@
+<header class="header">
+  <div class="header-selects">
+    <div class="select-group">
+      <label class="select-label">Organização</label>
+      <select
+        class="select"
+        [ngModel]="organizationService.currentOrganization()?.id"
+        (ngModelChange)="onOrganizationChange($event)"
+      >
+        @for (org of organizationService.organizations(); track org.id) {
+          <option [value]="org.id">{{ org.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="select-group">
+      <label class="select-label">Equipe</label>
+      <select
+        class="select"
+        [ngModel]="teamService.currentTeam()?.id"
+        (ngModelChange)="onTeamChange($event)"
+      >
+        @for (team of teamService.teams(); track team.id) {
+          <option [value]="team.id">{{ team.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <app-theme-toggle />
+  </div>
+</header>
