@@ -2,8 +2,8 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { OrganizationService } from '../../core/services/organization.service';
-import { TeamService } from '../../core/services/team.service';
+import { OrganizationService, CreateOrganizationDto } from '../../core/services/organization.service';
+import { TeamService, CreateTeamDto } from '../../core/services/team.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 
 type OnboardingStep = 'welcome' | 'create-org' | 'create-team' | 'complete';
@@ -15,30 +15,28 @@ type OnboardingStep = 'welcome' | 'create-org' | 'create-team' | 'complete';
   styleUrl: './home.css',
 })
 export class Home implements OnInit {
-  // Estado do onboarding
-  onboardingStep = signal<OnboardingStep>('welcome');
-
-  // Formulários
-  orgForm = {
-    name: '',
-    slug: '',
-    description: '',
-  };
-
-  teamForm = {
-    name: '',
-    slug: '',
-    description: '',
-  };
-
   // Estado computado
   hasOrganization = computed(() => this.organizationService.organizations().length > 0);
   hasTeam = computed(() => this.teamService.teams().length > 0);
   showDashboard = computed(() => this.hasOrganization() && this.hasTeam());
+  skippedOnboarding = computed(() => this.organizationService.skippedOnboarding());
 
-  // Loading states
-  isCreatingOrg = signal(false);
-  isCreatingTeam = signal(false);
+  // Onboarding state
+  currentStep = signal<OnboardingStep>('welcome');
+
+  // Formulário de organização
+  orgName = signal('');
+  orgSlug = signal('');
+  orgDescription = signal('');
+  orgLogoFile = signal<File | null>(null);
+  orgLogoPreview = signal<string | null>(null);
+
+  // Formulário de equipe
+  teamName = signal('');
+  teamSlug = signal('');
+  teamDescription = signal('');
+  teamLogoFile = signal<File | null>(null);
+  teamLogoPreview = signal<string | null>(null);
 
   constructor(
     public authService: AuthService,
@@ -79,78 +77,180 @@ export class Home implements OnInit {
     this.dashboardService.getFullDashboard(teamId).subscribe();
   }
 
-  // Onboarding actions
+  // Onboarding navigation
   startOnboarding(): void {
-    this.onboardingStep.set('create-org');
+    this.currentStep.set('create-org');
   }
 
-  generateSlug(name: string, type: 'org' | 'team'): void {
-    const slug = name
+  goToTeamStep(): void {
+    this.currentStep.set('create-team');
+  }
+
+  skipOnboarding(): void {
+    this.organizationService.setSkippedOnboarding(true);
+  }
+
+  // Slug generation
+  generateSlug(name: string): string {
+    return name
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
 
-    if (type === 'org') {
-      this.orgForm.slug = slug;
-    } else {
-      this.teamForm.slug = slug;
+  onOrgNameChange(value: string): void {
+    this.orgName.set(value);
+    this.orgSlug.set(this.generateSlug(value));
+  }
+
+  onTeamNameChange(value: string): void {
+    this.teamName.set(value);
+    this.teamSlug.set(this.generateSlug(value));
+  }
+
+  // Logo handling
+  onOrgLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.orgLogoFile.set(file);
+      this.orgLogoPreview.set(URL.createObjectURL(file));
     }
   }
 
-  createOrganization(): void {
-    if (!this.orgForm.name || !this.orgForm.slug) return;
+  removeOrgLogo(): void {
+    if (this.orgLogoPreview()) {
+      URL.revokeObjectURL(this.orgLogoPreview()!);
+    }
+    this.orgLogoFile.set(null);
+    this.orgLogoPreview.set(null);
+  }
 
-    this.isCreatingOrg.set(true);
-    this.organizationService.create({
-      name: this.orgForm.name,
-      slug: this.orgForm.slug,
-      description: this.orgForm.description || undefined,
-    }).subscribe({
+  onTeamLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.teamLogoFile.set(file);
+      this.teamLogoPreview.set(URL.createObjectURL(file));
+    }
+  }
+
+  removeTeamLogo(): void {
+    if (this.teamLogoPreview()) {
+      URL.revokeObjectURL(this.teamLogoPreview()!);
+    }
+    this.teamLogoFile.set(null);
+    this.teamLogoPreview.set(null);
+  }
+
+  // Form submissions
+  createOrganization(): void {
+    const dto: CreateOrganizationDto = {
+      name: this.orgName(),
+      slug: this.orgSlug(),
+      description: this.orgDescription() || undefined,
+      logoUrl: this.orgLogoPreview() || undefined,
+    };
+
+    this.organizationService.create(dto).subscribe({
       next: () => {
-        this.isCreatingOrg.set(false);
-        this.onboardingStep.set('create-team');
-      },
-      error: () => {
-        this.isCreatingOrg.set(false);
+        this.currentStep.set('create-team');
       },
     });
   }
 
   createTeam(): void {
-    if (!this.teamForm.name || !this.teamForm.slug) return;
+    const orgId = this.organizationService.currentOrganization()?.id;
+    if (!orgId) return;
 
-    const currentOrg = this.organizationService.currentOrganization();
-    if (!currentOrg) return;
+    const dto: CreateTeamDto = {
+      name: this.teamName(),
+      slug: this.teamSlug(),
+      description: this.teamDescription() || undefined,
+      logoUrl: this.teamLogoPreview() || undefined,
+    };
 
-    this.isCreatingTeam.set(true);
-    this.teamService.create(currentOrg.id, {
-      name: this.teamForm.name,
-      slug: this.teamForm.slug,
-      description: this.teamForm.description || undefined,
-    }).subscribe({
-      next: (team) => {
-        this.isCreatingTeam.set(false);
-        this.onboardingStep.set('complete');
-        // Carrega o dashboard após criar o team
-        setTimeout(() => {
-          this.loadDashboard(team.id);
-        }, 2000);
-      },
-      error: () => {
-        this.isCreatingTeam.set(false);
+    this.teamService.create(orgId, dto).subscribe({
+      next: () => {
+        this.currentStep.set('complete');
       },
     });
   }
 
-  finishOnboarding(): void {
-    const currentTeam = this.teamService.currentTeam();
-    if (currentTeam) {
-      this.loadDashboard(currentTeam.id);
+  goToDashboard(): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      this.loadDashboard(teamId);
     }
+  }
+
+  // Modal para criar organização (quando pulou onboarding)
+  showCreateOrgModal = signal(false);
+  modalStep = signal<'org' | 'team'>('org');
+
+  openCreateOrgModal(): void {
+    this.modalStep.set('org');
+    this.resetOrgForm();
+    this.showCreateOrgModal.set(true);
+  }
+
+  closeCreateOrgModal(): void {
+    this.showCreateOrgModal.set(false);
+    this.resetOrgForm();
+    this.resetTeamForm();
+  }
+
+  private resetOrgForm(): void {
+    this.orgName.set('');
+    this.orgSlug.set('');
+    this.orgDescription.set('');
+    this.removeOrgLogo();
+  }
+
+  private resetTeamForm(): void {
+    this.teamName.set('');
+    this.teamSlug.set('');
+    this.teamDescription.set('');
+    this.removeTeamLogo();
+  }
+
+  createOrganizationFromModal(): void {
+    const dto: CreateOrganizationDto = {
+      name: this.orgName(),
+      slug: this.orgSlug(),
+      description: this.orgDescription() || undefined,
+      logoUrl: this.orgLogoPreview() || undefined,
+    };
+
+    this.organizationService.create(dto).subscribe({
+      next: () => {
+        this.modalStep.set('team');
+      },
+    });
+  }
+
+  createTeamFromModal(): void {
+    const orgId = this.organizationService.currentOrganization()?.id;
+    if (!orgId) return;
+
+    const dto: CreateTeamDto = {
+      name: this.teamName(),
+      slug: this.teamSlug(),
+      description: this.teamDescription() || undefined,
+      logoUrl: this.teamLogoPreview() || undefined,
+    };
+
+    this.teamService.create(orgId, dto).subscribe({
+      next: () => {
+        this.closeCreateOrgModal();
+        const teamId = this.teamService.currentTeam()?.id;
+        if (teamId) {
+          this.loadDashboard(teamId);
+        }
+      },
+    });
   }
 
   // Dashboard helpers

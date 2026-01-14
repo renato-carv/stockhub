@@ -30,6 +30,7 @@ export class OrganizationService {
   organizations = signal<Organization[]>([]);
   currentOrganization = signal<Organization | null>(null);
   isLoading = signal(false);
+  skippedOnboarding = signal(false);
 
   constructor(private http: HttpClient) {}
 
@@ -76,5 +77,9 @@ export class OrganizationService {
 
   setCurrentOrganization(org: Organization): void {
     this.currentOrganization.set(org);
+  }
+
+  setSkippedOnboarding(skipped: boolean): void {
+    this.skippedOnboarding.set(skipped);
   }
 }

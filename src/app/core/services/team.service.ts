@@ -9,6 +9,7 @@ export interface Team {
   name: string;
   slug: string;
   description?: string;
+  logoUrl?: string;
   organizationId: string;
   createdAt: string;
   updatedAt: string;
@@ -18,6 +19,7 @@ export interface CreateTeamDto {
   name: string;
   slug: string;
   description?: string;
+  logoUrl?: string;
 }
 
 @Injectable({
