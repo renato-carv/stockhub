@@ -1,0 +1,81 @@
+@if (totalItems() > 0) {
+<div class="pagination-container">
+  <div class="pagination-info">
+    <span class="showing-text">
+      Mostrando <strong>{{ itemRange().start }}</strong> - <strong>{{ itemRange().end }}</strong> de
+      <strong>{{ totalItems() }}</strong>
+    </span>
+  </div>
+
+  <div class="pagination-controls">
+    <!-- Page size selector -->
+    <div class="page-size-selector">
+      <label for="pageSize">Por página:</label>
+      <select
+        id="pageSize"
+        [ngModel]="pageSize()"
+        (ngModelChange)="onPageSizeSelected($event)"
+      >
+        @for (option of pageSizeOptions; track option) {
+        <option [ngValue]="option">{{ option }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Page navigation -->
+    <div class="page-navigation">
+      <button
+        class="nav-btn"
+        [disabled]="currentPage() === 1"
+        (click)="goToPreviousPage()"
+        title="Página anterior"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
+      <div class="page-numbers">
+        @for (page of visiblePages(); track $index) { @if (page === 'ellipsis') {
+        <span class="ellipsis">...</span>
+        } @else {
+        <button
+          class="page-btn"
+          [class.active]="page === currentPage()"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        } }
+      </div>
+
+      <button
+        class="nav-btn"
+        [disabled]="currentPage() === totalPages()"
+        (click)="goToNextPage()"
+        title="Próxima página"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+}

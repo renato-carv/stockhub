@@ -28,6 +28,7 @@
   flex: 1;
   padding: 1.5rem;
   background: var(--background);
+  min-height: 0;
 }
 
 @media (max-width: 768px) {

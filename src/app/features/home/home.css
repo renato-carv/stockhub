@@ -1,11 +1,8 @@
 :host {
   display: block;
-  min-height: 100vh;
-  background: var(--background);
 }
 
 .home-container {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -75,9 +72,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: calc(100vh - 140px);
   padding: 2rem;
-  margin-top: -5vh;
 }
 
 .onboarding-card {

@@ -1,0 +1,759 @@
+<div class="categories-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Categorias</h1>
+      <p class="header-subtitle">Organize seus produtos em categorias</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="openImportModal()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        Importar
+      </button>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+        Nova Categoria
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon purple">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"
+          />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalCategories() }}</span>
+        <span class="stat-label">Total de Categorias</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="filters-bar">
+    <div class="search-input">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+      <input
+        type="text"
+        placeholder="Buscar categorias..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Categories Table -->
+  <div class="table-container">
+    @if (categoryService.isLoading()) {
+    <div class="loading-state">
+      <div class="spinner-large"></div>
+      <p>Carregando categorias...</p>
+    </div>
+    } @else {
+    <table class="categories-table">
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (category of categoryService.categories(); track category.id) {
+        <tr>
+          <td>
+            <div class="category-cell">
+              <div class="category-color-dot" [style.background-color]="category.color || '#6366f1'"></div>
+              <div class="category-info">
+                <span class="category-name">{{ category.name }}</span>
+                @if (category.description) {
+                <span class="category-description">{{ category.description }}</span>
+                }
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-icon" title="Editar" (click)="openEditModal(category)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              </button>
+              <button class="btn-icon danger" title="Excluir" (click)="openDeleteModal(category)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="2">
+            <div class="empty-state">
+              <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+                </svg>
+              </div>
+              @if (searchQuery()) {
+              <h3>Nenhuma categoria encontrada</h3>
+              <p>Tente ajustar sua busca</p>
+              } @else {
+              <h3>Nenhuma categoria cadastrada</h3>
+              <p>Comece criando sua primeira categoria ou importe de um arquivo</p>
+              <div class="empty-actions">
+                <button class="btn-secondary" (click)="openImportModal()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  Importar Categorias
+                </button>
+                <button class="btn-primary" (click)="openCreateModal()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14" />
+                    <path d="M5 12h14" />
+                  </svg>
+                  Criar Categoria
+                </button>
+              </div>
+              }
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    <app-pagination
+      [meta]="categoryService.paginationMeta()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
+    }
+  </div>
+</div>
+
+<!-- Modal Criar/Editar -->
+@if (showModal()) {
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeModal()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <div class="modal-header">
+      <div
+        class="modal-icon"
+        [style.background-color]="categoryColor() + '20'"
+        [style.color]="categoryColor()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"
+          />
+        </svg>
+      </div>
+      <h2>{{ isEditing() ? 'Editar Categoria' : 'Nova Categoria' }}</h2>
+      <p>
+        {{
+          isEditing()
+            ? 'Atualize as informações da categoria'
+            : 'Preencha as informações da categoria'
+        }}
+      </p>
+    </div>
+
+    <form class="modal-form" (ngSubmit)="saveCategory()">
+      <div class="form-group">
+        <label for="categoryName">Nome *</label>
+        <input
+          type="text"
+          id="categoryName"
+          [ngModel]="categoryName()"
+          (ngModelChange)="categoryName.set($event)"
+          name="categoryName"
+          placeholder="Ex: Eletrônicos"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="categoryDescription">Descrição</label>
+        <textarea
+          id="categoryDescription"
+          [ngModel]="categoryDescription()"
+          (ngModelChange)="categoryDescription.set($event)"
+          name="categoryDescription"
+          placeholder="Descrição opcional da categoria..."
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Cor</label>
+        <div class="color-selector">
+          <div class="preset-colors">
+            @for (color of presetColors; track color) {
+            <button
+              type="button"
+              class="color-option"
+              [class.selected]="categoryColor() === color"
+              [style.background-color]="color"
+              (click)="selectColor(color)"
+            ></button>
+            }
+          </div>
+          <input
+            type="color"
+            [ngModel]="categoryColor()"
+            (ngModelChange)="categoryColor.set($event)"
+            name="categoryColor"
+            class="color-input"
+          />
+        </div>
+        <div class="color-preview-row">
+          <span class="preview-label">Preview:</span>
+          <span
+            class="category-badge-preview"
+            [style.background-color]="categoryColor() + '20'"
+            [style.color]="categoryColor()"
+          >
+            {{ categoryName() || 'Nome da categoria' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="!categoryName() || categoryService.isLoading()"
+        >
+          @if (categoryService.isLoading()) {
+          <div class="spinner"></div>
+          Salvando... } @else {
+          {{ isEditing() ? 'Salvar Alterações' : 'Criar Categoria' }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Modal Excluir -->
+@if (showDeleteModal()) {
+<div class="modal-overlay" (click)="closeDeleteModal()">
+  <div class="modal modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-icon danger">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        </svg>
+      </div>
+      <h2>Excluir</h2>
+      <p>
+        Tem certeza que deseja excluir <strong>{{ categoryToDelete()?.name }}</strong
+        >? Produtos associados ficarão sem categoria.
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeDeleteModal()">Cancelar</button>
+      <button
+        type="button"
+        class="btn-danger"
+        (click)="confirmDelete()"
+        [disabled]="categoryService.isLoading()"
+      >
+        @if (categoryService.isLoading()) {
+        <div class="spinner"></div>
+        Excluindo... } @else { Excluir }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Modal Importar -->
+@if (showImportModal()) {
+<div class="modal-overlay" (click)="closeImportModal()">
+  <div class="modal modal-xl" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeImportModal()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Step: Upload -->
+    @if (importStep() === 'upload') {
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      </div>
+      <h2>Importar Categorias</h2>
+      <p>Faça upload de um arquivo CSV ou Excel com suas categorias</p>
+    </div>
+
+    <div class="import-content">
+      <div
+        class="upload-zone"
+        (drop)="onFileDrop($event)"
+        (dragover)="onDragOver($event)"
+        [class.has-file]="importFile()"
+      >
+        <input
+          type="file"
+          id="importFileInput"
+          accept=".csv,.xlsx,.xls"
+          hidden
+          (change)="onFileSelected($event)"
+        />
+
+        @if (importFile()) {
+        <div class="file-info">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <span class="file-name">{{ importFile()?.name }}</span>
+          <span class="file-size"
+            >{{ (importFile()?.size || 0) / 1024 | number : '1.0-0' }} KB</span
+          >
+        </div>
+        } @else {
+        <label for="importFileInput" class="upload-label">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span class="upload-text">Arraste um arquivo ou clique para selecionar</span>
+          <span class="upload-hint">CSV ou Excel (.csv, .xlsx, .xls)</span>
+        </label>
+        }
+      </div>
+
+      <div class="template-section">
+        <p>Não sabe como formatar o arquivo?</p>
+        <button type="button" class="btn-link" (click)="downloadTemplate()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Baixar template de exemplo
+        </button>
+      </div>
+
+      <div class="format-info">
+        <h4>Formato esperado:</h4>
+        <table class="format-table">
+          <thead>
+            <tr>
+              <th>nome *</th>
+              <th>descrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Eletrônicos</td>
+              <td>Produtos eletrônicos</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeImportModal()">Cancelar</button>
+    </div>
+    }
+
+    <!-- Step: Preview -->
+    @if (importStep() === 'preview') {
+    <div class="modal-header compact">
+      <h2>Preview da Importação</h2>
+      <p>
+        Verifique os dados antes de confirmar. Você pode editar ou remover linhas com problemas.
+      </p>
+    </div>
+
+    <div class="import-stats">
+      <div class="stat-item valid">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+        <span>{{ validRowsCount }} válidas</span>
+      </div>
+      @if (invalidRowsCount > 0) {
+      <div class="stat-item invalid">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="15" y1="9" x2="9" y2="15" />
+          <line x1="9" y1="9" x2="15" y2="15" />
+        </svg>
+        <span>{{ invalidRowsCount }} com erros</span>
+      </div>
+      <button type="button" class="btn-remove-invalid" (click)="removeInvalidRows()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        </svg>
+        Remover inválidas
+      </button>
+      }
+    </div>
+
+    <div class="preview-table-container">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th class="col-status"></th>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Cor</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of importData(); track $index; let i = $index) {
+          <tr [class.invalid]="!row.isValid">
+            <td class="col-status">
+              @if (row.isValid) {
+              <span class="status-icon valid">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+              } @else {
+              <span class="status-icon invalid" [title]="row.errors.join(', ')">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </span>
+              }
+            </td>
+            <td>
+              <input
+                type="text"
+                class="inline-input"
+                [class.error]="!row.name"
+                [value]="row.name"
+                (input)="updateImportRow(i, 'name', $any($event.target).value)"
+                placeholder="Nome obrigatório"
+              />
+            </td>
+            <td>
+              <input
+                type="text"
+                class="inline-input"
+                [value]="row.description || ''"
+                (input)="updateImportRow(i, 'description', $any($event.target).value)"
+                placeholder="Opcional"
+              />
+            </td>
+            <td>
+              <div class="color-cell">
+                <input
+                  type="color"
+                  class="inline-color"
+                  [value]="row.color || '#6366f1'"
+                  (input)="updateImportRow(i, 'color', $any($event.target).value)"
+                />
+                <span
+                  class="color-badge"
+                  [style.background-color]="(row.color || '#6366f1') + '20'"
+                  [style.color]="row.color || '#6366f1'"
+                >
+                  {{ row.name || 'Preview' }}
+                </span>
+              </div>
+            </td>
+            <td class="col-actions">
+              <button
+                type="button"
+                class="btn-icon-sm danger"
+                (click)="removeImportRow(i)"
+                title="Remover"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+          @if (!row.isValid && row.errors.length > 0) {
+          <tr class="error-row">
+            <td></td>
+            <td colspan="4">
+              <span class="error-message">{{ row.errors.join(', ') }}</span>
+            </td>
+          </tr>
+          } }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="backToUpload()">Voltar</button>
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="confirmImport()"
+        [disabled]="validRowsCount === 0"
+      >
+        Importar {{ validRowsCount }} categoria{{ validRowsCount !== 1 ? 's' : '' }}
+      </button>
+    </div>
+    }
+
+    <!-- Step: Importing -->
+    @if (importStep() === 'importing') {
+    <div class="import-progress">
+      <div class="progress-icon">
+        <div class="spinner-large"></div>
+      </div>
+      <h3>Importando categorias...</h3>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="importProgress()"></div>
+      </div>
+      <span class="progress-text">{{ importProgress() }}%</span>
+    </div>
+    }
+
+    <!-- Step: Done -->
+    @if (importStep() === 'done') {
+    <div class="import-done">
+      <div class="done-icon" [class.has-errors]="importResults().errors > 0">
+        @if (importResults().errors === 0) {
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+        } @else {
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+          />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        }
+      </div>
+      <h3>Importação concluída!</h3>
+      <div class="done-stats">
+        <div class="done-stat success">
+          <span class="done-value">{{ importResults().success }}</span>
+          <span class="done-label">importadas com sucesso</span>
+        </div>
+        @if (importResults().errors > 0) {
+        <div class="done-stat error">
+          <span class="done-value">{{ importResults().errors }}</span>
+          <span class="done-label">com erro</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-primary" (click)="closeImportModal()">Concluir</button>
+    </div>
+    }
+  </div>
+</div>
+}

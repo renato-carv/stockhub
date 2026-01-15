@@ -124,4 +124,9 @@ export class AuthService {
         },
       });
   }
+
+  clearAuth(): void {
+    this.user.set(null);
+    this.isAuthenticated.set(false);
+  }
 }

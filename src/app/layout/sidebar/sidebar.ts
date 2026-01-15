@@ -2,6 +2,8 @@ import { Component, inject, computed } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SidebarService } from './sidebar.service';
+import { OrganizationService } from '../../core/services/organization.service';
+import { TeamService } from '../../core/services/team.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -13,6 +15,8 @@ export class Sidebar {
   private router = inject(Router);
   protected authService = inject(AuthService);
   protected sidebarService = inject(SidebarService);
+  private organizationService = inject(OrganizationService);
+  private teamService = inject(TeamService);
 
   get isCollapsed() {
     return this.sidebarService.isCollapsed;
@@ -29,6 +33,8 @@ export class Sidebar {
 
   logout() {
     this.authService.logout();
+    this.organizationService.clearStorage();
+    this.teamService.clearStorage();
     this.router.navigate(['/login']);
   }
 }

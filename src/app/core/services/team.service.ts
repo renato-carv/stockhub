@@ -27,12 +27,44 @@ export interface CreateTeamDto {
 })
 export class TeamService {
   private readonly apiUrl = environment.apiUrl;
+  private readonly STORAGE_KEY = 'stockhub_teams';
+  private readonly CURRENT_KEY = 'stockhub_current_team';
 
   teams = signal<Team[]>([]);
   currentTeam = signal<Team | null>(null);
   isLoading = signal(false);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage(): void {
+    try {
+      const teamsData = localStorage.getItem(this.STORAGE_KEY);
+      if (teamsData) {
+        this.teams.set(JSON.parse(teamsData));
+      }
+
+      const currentData = localStorage.getItem(this.CURRENT_KEY);
+      if (currentData) {
+        this.currentTeam.set(JSON.parse(currentData));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  private saveToStorage(): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.teams()));
+      const current = this.currentTeam();
+      if (current) {
+        localStorage.setItem(this.CURRENT_KEY, JSON.stringify(current));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }
 
   getByOrganization(orgId: string): Observable<Team[]> {
     this.isLoading.set(true);
@@ -44,6 +76,7 @@ export class TeamService {
         tap((teams) => {
           this.teams.set(teams);
           this.isLoading.set(false);
+          this.saveToStorage();
         })
       );
   }
@@ -56,6 +89,7 @@ export class TeamService {
       .pipe(
         tap((team) => {
           this.currentTeam.set(team);
+          this.saveToStorage();
         })
       );
   }
@@ -71,11 +105,20 @@ export class TeamService {
           this.teams.update((teams) => [...teams, team]);
           this.currentTeam.set(team);
           this.isLoading.set(false);
+          this.saveToStorage();
         })
       );
   }
 
   setCurrentTeam(team: Team): void {
     this.currentTeam.set(team);
+    this.saveToStorage();
+  }
+
+  clearStorage(): void {
+    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.CURRENT_KEY);
+    this.teams.set([]);
+    this.currentTeam.set(null);
   }
 }
