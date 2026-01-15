@@ -334,7 +334,23 @@
 }
 
 .stock-value {
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stock-min {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.stock-max {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.barcode-text {
+  font-size: 0.8125rem;
+  font-family: monospace;
   color: var(--text);
 }
 
@@ -968,7 +984,7 @@
   }
 
   .products-table {
-    min-width: 800px;
+    min-width: 1100px;
   }
 
   .form-row {
@@ -985,9 +1001,19 @@
   }
 }
 
+/* Tabela com scroll horizontal para telas menores */
+.table-container {
+  overflow-x: auto;
+}
+
+.products-table {
+  min-width: 1100px;
+}
+
 /* ===================== IMPORT MODAL ===================== */
 .modal.modal-xl {
-  max-width: 900px;
+  max-width: 1200px;
+  width: 95vw;
 }
 
 .header-actions {
@@ -1155,23 +1181,25 @@
 
 /* Preview Table */
 .preview-table-container {
-  max-height: 400px;
-  overflow-y: auto;
+  max-height: 450px;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 
 .preview-table {
   width: 100%;
+  min-width: 1000px;
   border-collapse: collapse;
   font-size: 0.8125rem;
 }
 
 .preview-table th,
 .preview-table td {
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem 0.375rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .preview-table th {
@@ -1222,7 +1250,8 @@
 .inline-input,
 .inline-select {
   width: 100%;
-  padding: 0.375rem 0.5rem;
+  min-width: 70px;
+  padding: 0.5rem 0.5rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -1249,7 +1278,16 @@
 }
 
 .inline-input-sm {
-  max-width: 80px;
+  min-width: 60px;
+  width: 70px;
+}
+
+.inline-input-text {
+  min-width: 100px;
+}
+
+.inline-select {
+  min-width: 90px;
 }
 
 /* Error Row */

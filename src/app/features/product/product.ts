@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { ProductService, Product as ProductModel, CreateProductDto, UpdateProductDto } from '../../core/services/product.service';
 import { TeamService } from '../../core/services/team.service';
 import { CategoryService, Category, CreateCategoryDto } from '../../core/services/category.service';
@@ -10,9 +11,11 @@ interface ImportRow {
   name: string;
   sku: string;
   description?: string;
+  barcode?: string;
   categoryId?: string;
   categoryName?: string;
   unit: string;
+  currentStock: number;
   costPrice: number;
   salePrice: number;
   minStock: number;
@@ -75,7 +78,7 @@ export class Product implements OnInit {
   // Stats - usando allProducts para ter valores corretos
   totalProducts = computed(() => this.productService.paginationMeta()?.total ?? 0);
   totalValue = computed(() => {
-    return this.productService.allProducts().reduce((acc, p) => acc + (p.currentStock * p.costPrice), 0);
+    return this.productService.allProducts().reduce((acc, p) => acc + (p.currentStock * (p.costPrice ?? 0)), 0);
   });
   lowStockCount = computed(() => {
     return this.productService.allProducts().filter((p) => p.currentStock <= p.minStock && p.currentStock > 0).length;
@@ -176,8 +179,8 @@ export class Product implements OnInit {
     this.productDescription.set(product.description || '');
     this.productCategoryId.set(product.categoryId || null);
     this.productUnit.set(product.unit);
-    this.productCostPrice.set(product.costPrice);
-    this.productSalePrice.set(product.salePrice);
+    this.productCostPrice.set(product.costPrice ?? 0);
+    this.productSalePrice.set(product.salePrice ?? 0);
     this.productMinStock.set(product.minStock);
     this.productMaxStock.set(product.maxStock || null);
 
@@ -404,6 +407,12 @@ export class Product implements OnInit {
   }
 
   private async parseFile(file: File): Promise<void> {
+    // Garante que as categorias estejam carregadas antes de parsear
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      await firstValueFrom(this.categoryService.getByTeam(teamId, { limit: 1000 }));
+    }
+
     const extension = file.name.split('.').pop()?.toLowerCase();
 
     if (extension === 'csv') {
@@ -431,10 +440,12 @@ export class Product implements OnInit {
     const nameIndex = headers.findIndex(h => h === 'nome' || h === 'name');
     const skuIndex = headers.findIndex(h => h === 'sku' || h === 'código' || h === 'codigo');
     const descIndex = headers.findIndex(h => h === 'descrição' || h === 'descricao' || h === 'description');
+    const barcodeIndex = headers.findIndex(h => h === 'código de barras' || h === 'codigo de barras' || h === 'barcode' || h === 'ean');
     const categoryIndex = headers.findIndex(h => h === 'categoria' || h === 'category');
     const unitIndex = headers.findIndex(h => h === 'unidade' || h === 'unit');
     const costIndex = headers.findIndex(h => h === 'preço custo' || h === 'preco custo' || h === 'custo' || h === 'cost');
     const saleIndex = headers.findIndex(h => h === 'preço venda' || h === 'preco venda' || h === 'venda' || h === 'sale' || h === 'price');
+    const currentStockIndex = headers.findIndex(h => h === 'estoque atual' || h === 'estoque' || h === 'current stock' || h === 'stock' || h === 'quantidade');
     const minStockIndex = headers.findIndex(h => h === 'estoque mínimo' || h === 'estoque minimo' || h === 'min stock');
     const maxStockIndex = headers.findIndex(h => h === 'estoque máximo' || h === 'estoque maximo' || h === 'max stock');
 
@@ -446,8 +457,10 @@ export class Product implements OnInit {
         nameIndex >= 0 ? values[nameIndex] : '',
         skuIndex >= 0 ? values[skuIndex] : '',
         descIndex >= 0 ? values[descIndex] : undefined,
+        barcodeIndex >= 0 ? values[barcodeIndex] : undefined,
         categoryIndex >= 0 ? values[categoryIndex] : undefined,
         unitIndex >= 0 ? values[unitIndex] : 'un',
+        currentStockIndex >= 0 ? parseInt(values[currentStockIndex]) || 0 : 0,
         costIndex >= 0 ? parseFloat(values[costIndex]) || 0 : 0,
         saleIndex >= 0 ? parseFloat(values[saleIndex]) || 0 : 0,
         minStockIndex >= 0 ? parseInt(values[minStockIndex]) || 0 : 0,
@@ -491,6 +504,7 @@ export class Product implements OnInit {
         name: '',
         sku: '',
         unit: 'un',
+        currentStock: 0,
         costPrice: 0,
         salePrice: 0,
         minStock: 0,
@@ -506,8 +520,10 @@ export class Product implements OnInit {
     name: string,
     sku: string,
     description?: string,
+    barcode?: string,
     categoryName?: string,
     unit?: string,
+    currentStock?: number,
     costPrice?: number,
     salePrice?: number,
     minStock?: number,
@@ -553,9 +569,11 @@ export class Product implements OnInit {
       name: name?.trim() || '',
       sku: sku?.trim() || '',
       description: description?.trim(),
+      barcode: barcode?.trim(),
       categoryId,
       categoryName: categoryName?.trim(),
       unit: validUnits.includes(normalizedUnit) ? normalizedUnit : 'un',
+      currentStock: currentStock || 0,
       costPrice: costPrice || 0,
       salePrice: salePrice || 0,
       minStock: minStock || 0,
@@ -572,7 +590,7 @@ export class Product implements OnInit {
     // Atualiza o campo
     (row as any)[field] = value;
 
-    // Se mudou a categoria, atualiza categoryId
+    // Se mudou a categoria por nome, atualiza categoryId
     if (field === 'categoryName') {
       const category = this.categoryService.allCategories().find(
         c => c.name.toLowerCase() === value.toLowerCase()
@@ -580,20 +598,32 @@ export class Product implements OnInit {
       row.categoryId = category?.id;
     }
 
-    // Revalidar
-    const revalidated = this.createImportRow(
-      row.name,
-      row.sku,
-      row.description,
-      row.categoryName,
-      row.unit,
-      row.costPrice,
-      row.salePrice,
-      row.minStock,
-      row.maxStock
-    );
+    // Se mudou a categoria por ID, atualiza categoryName
+    if (field === 'categoryId') {
+      const category = this.categoryService.allCategories().find(c => c.id === value);
+      row.categoryName = category?.name || '';
+    }
 
-    data[index] = revalidated;
+    // Revalidar a linha
+    row.errors = [];
+
+    if (!row.name?.trim()) {
+      row.errors.push('Nome é obrigatório');
+    }
+
+    if (!row.sku?.trim()) {
+      row.errors.push('SKU é obrigatório');
+    } else {
+      // Verifica SKU duplicado
+      const duplicateIndex = data.findIndex((r, i) => i !== index && r.sku === row.sku);
+      if (duplicateIndex !== -1) {
+        row.errors.push('SKU duplicado no arquivo');
+      }
+    }
+
+    row.isValid = row.errors.length === 0;
+
+    data[index] = row;
     this.importData.set(data);
   }
 
@@ -624,39 +654,36 @@ export class Product implements OnInit {
     if (validRows.length === 0) return;
 
     this.importStep.set('importing');
-    let success = 0;
-    let errors = 0;
+    this.importProgress.set(50);
 
-    for (let i = 0; i < validRows.length; i++) {
-      const row = validRows[i];
+    const products = validRows.map(row => ({
+      name: row.name,
+      sku: row.sku,
+      description: row.description,
+      barcode: row.barcode,
+      categoryId: row.categoryId,
+      unit: row.unit,
+      currentStock: row.currentStock,
+      costPrice: row.costPrice,
+      salePrice: row.salePrice,
+      minStock: row.minStock,
+      maxStock: row.maxStock,
+    }));
 
-      try {
-        await this.productService.create(teamId, {
-          name: row.name,
-          sku: row.sku,
-          description: row.description,
-          categoryId: row.categoryId,
-          unit: row.unit,
-          costPrice: row.costPrice,
-          salePrice: row.salePrice,
-          minStock: row.minStock,
-          maxStock: row.maxStock,
-        }).toPromise();
-        success++;
-      } catch {
-        errors++;
-      }
-
-      this.importProgress.set(Math.round(((i + 1) / validRows.length) * 100));
+    try {
+      const result = await firstValueFrom(this.productService.bulkCreate(teamId, products));
+      this.importResults.set({ success: result.created, errors: result.errors });
+    } catch {
+      this.importResults.set({ success: 0, errors: validRows.length });
     }
 
-    this.importResults.set({ success, errors });
+    this.importProgress.set(100);
     this.importStep.set('done');
     this.loadProducts();
   }
 
   downloadTemplate(): void {
-    const csvContent = 'nome;sku;descrição;categoria;unidade;preço custo;preço venda;estoque mínimo;estoque máximo\nCamiseta Básica;CAM-001;Camiseta 100% algodão;Vestuário;un;25.00;49.90;10;100\nCalça Jeans;CAL-001;Calça jeans tradicional;Vestuário;un;45.00;99.90;5;50';
+    const csvContent = 'nome;sku;descrição;código de barras;categoria;unidade;estoque atual;preço custo;preço venda;estoque mínimo;estoque máximo\nCamiseta Básica;CAM-001;Camiseta 100% algodão;7891234567890;Vestuário;un;50;25.00;49.90;10;100\nCalça Jeans;CAL-001;Calça jeans tradicional;7891234567891;Vestuário;un;30;45.00;99.90;5;50';
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);

@@ -22,6 +22,12 @@ export interface CreateCategoryDto {
 
 export interface UpdateCategoryDto extends Partial<CreateCategoryDto> {}
 
+export interface BulkCreateCategoryResult {
+  created: number;
+  errors: number;
+  errorDetails: { name: string; error: string }[];
+}
+
 export interface PaginationMeta {
   total: number;
   page: number;
@@ -157,6 +163,19 @@ export class CategoryService {
       .pipe(
         tap(() => {
           this.categories.update((categories) => categories.filter((c) => c.id !== categoryId));
+          this.isLoading.set(false);
+        })
+      );
+  }
+
+  bulkCreate(teamId: string, categories: CreateCategoryDto[]): Observable<BulkCreateCategoryResult> {
+    this.isLoading.set(true);
+    return this.http
+      .post<BulkCreateCategoryResult>(`${this.apiUrl}/teams/${teamId}/categories/bulk`, { categories }, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap(() => {
           this.isLoading.set(false);
         })
       );

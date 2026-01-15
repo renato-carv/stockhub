@@ -6,17 +6,20 @@ import { environment } from '../../../environments/environment';
 
 export interface Product {
   id: string;
+  teamId: string;
   name: string;
+  description?: string | null;
   sku: string;
-  description?: string;
-  categoryId?: string;
+  barcode?: string | null;
+  categoryId?: string | null;
   unit: string;
-  costPrice: number;
-  salePrice: number;
   currentStock: number;
   minStock: number;
-  maxStock?: number;
-  teamId: string;
+  maxStock?: number | null;
+  costPrice?: number | null;
+  salePrice?: number | null;
+  isActive: boolean;
+  imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,15 +28,24 @@ export interface CreateProductDto {
   name: string;
   sku: string;
   description?: string;
+  barcode?: string;
   categoryId?: string;
   unit: string;
-  costPrice: number;
-  salePrice: number;
-  minStock: number;
+  currentStock?: number;
+  costPrice?: number;
+  salePrice?: number;
+  minStock?: number;
   maxStock?: number;
+  imageUrl?: string;
 }
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {}
+
+export interface BulkCreateResult {
+  created: number;
+  errors: number;
+  errorDetails: { sku: string; error: string }[];
+}
 
 export interface PaginationMeta {
   total: number;
@@ -192,6 +204,19 @@ export class ProductService {
       .pipe(
         tap(() => {
           this.products.update((products) => products.filter((p) => p.id !== productId));
+          this.isLoading.set(false);
+        })
+      );
+  }
+
+  bulkCreate(teamId: string, products: CreateProductDto[]): Observable<BulkCreateResult> {
+    this.isLoading.set(true);
+    return this.http
+      .post<BulkCreateResult>(`${this.apiUrl}/teams/${teamId}/products/bulk`, { products }, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap(() => {
           this.isLoading.set(false);
         })
       );

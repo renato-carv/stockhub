@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { CategoryService, Category as CategoryModel, CreateCategoryDto, UpdateCategoryDto } from '../../core/services/category.service';
 import { TeamService } from '../../core/services/team.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
@@ -390,27 +391,22 @@ export class Category implements OnInit {
     if (validRows.length === 0) return;
 
     this.importStep.set('importing');
-    let success = 0;
-    let errors = 0;
+    this.importProgress.set(50);
 
-    for (let i = 0; i < validRows.length; i++) {
-      const row = validRows[i];
+    const categories = validRows.map(row => ({
+      name: row.name,
+      description: row.description,
+      color: row.color,
+    }));
 
-      try {
-        await this.categoryService.create(teamId, {
-          name: row.name,
-          description: row.description,
-          color: row.color,
-        }).toPromise();
-        success++;
-      } catch {
-        errors++;
-      }
-
-      this.importProgress.set(Math.round(((i + 1) / validRows.length) * 100));
+    try {
+      const result = await firstValueFrom(this.categoryService.bulkCreate(teamId, categories));
+      this.importResults.set({ success: result.created, errors: result.errors });
+    } catch {
+      this.importResults.set({ success: 0, errors: validRows.length });
     }
 
-    this.importResults.set({ success, errors });
+    this.importProgress.set(100);
     this.importStep.set('done');
     this.loadCategories();
   }
