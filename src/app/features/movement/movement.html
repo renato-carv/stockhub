@@ -1,0 +1,495 @@
+<div class="movements-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Movimentações</h1>
+      <p class="header-subtitle">Registre entradas, saídas e ajustes de estoque</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="openCreateModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+        Nova Movimentação
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3v18h18" />
+          <path d="m19 9-5 5-4-4-3 3" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalMovements() }}</span>
+        <span class="stat-label">Total de Movimentações</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 19V5" />
+          <path d="m5 12 7-7 7 7" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalEntries() }}</span>
+        <span class="stat-label">Entradas</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon red">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14" />
+          <path d="m19 12-7 7-7-7" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalExits() }}</span>
+        <span class="stat-label">Saídas</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon purple">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        </svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ totalAdjustments() }}</span>
+        <span class="stat-label">Ajustes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-input">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+      <input
+        type="text"
+        placeholder="Buscar por produto, usuário ou notas..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+
+    <select class="filter-select" [ngModel]="filterType()" (ngModelChange)="onFilterTypeChange($event)">
+      <option value="">Todos os tipos</option>
+      @for (type of typeOptions; track type.value) {
+      <option [value]="type.value">{{ type.label }}</option>
+      }
+    </select>
+
+    <select class="filter-select" [ngModel]="filterReason()" (ngModelChange)="onFilterReasonChange($event)">
+      <option value="">Todos os motivos</option>
+      @for (reason of reasonOptions; track reason.value) {
+      <option [value]="reason.value">{{ reason.label }}</option>
+      }
+    </select>
+
+    <select class="filter-select" [ngModel]="filterProductId()" (ngModelChange)="onFilterProductChange($event)">
+      <option value="">Todos os produtos</option>
+      @for (product of products(); track product.id) {
+      <option [value]="product.id">{{ product.name }}</option>
+      }
+    </select>
+
+    @if (searchQuery() || filterType() || filterReason() || filterProductId()) {
+    <button class="btn-clear-filters" (click)="clearFilters()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+      Limpar filtros
+    </button>
+    }
+  </div>
+
+  <!-- Movements Table -->
+  <div class="table-container">
+    @if (movementService.isLoading()) {
+    <div class="loading-state">
+      <div class="spinner-large"></div>
+      <p>Carregando movimentações...</p>
+    </div>
+    } @else if (movementService.movements().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 3v18h18" />
+          <path d="m19 9-5 5-4-4-3 3" />
+        </svg>
+      </div>
+      @if (searchQuery() || filterType() || filterReason() || filterProductId()) {
+      <h3>Nenhuma movimentação encontrada</h3>
+      <p>Tente ajustar os filtros de busca</p>
+      } @else {
+      <h3>Nenhuma movimentação registrada</h3>
+      <p>Comece registrando a primeira movimentação de estoque</p>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+        Nova Movimentação
+      </button>
+      }
+    </div>
+    } @else {
+    <table class="movements-table">
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Tipo</th>
+          <th>Produto</th>
+          <th>Motivo</th>
+          <th class="text-center">Quantidade</th>
+          <th class="text-center">Estoque Ant.</th>
+          <th class="text-center">Estoque Nov.</th>
+          <th>Usuário</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (movement of movementService.movements(); track movement.id) {
+        <tr>
+          <td>
+            <span class="date-cell">{{ formatShortDate(movement.createdAt) }}</span>
+          </td>
+          <td>
+            <span class="type-badge" [class]="getTypeClass(movement.type)">
+              {{ getTypeLabel(movement.type) }}
+            </span>
+          </td>
+          <td>
+            <div class="product-cell">
+              <span class="product-name">{{ movement.product.name }}</span>
+              <span class="product-sku">{{ movement.product.sku }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="reason-badge">{{ getReasonLabel(movement.reason) }}</span>
+          </td>
+          <td class="text-center">
+            <span class="quantity-badge" [class]="getTypeClass(movement.type)">
+              @if (movement.type === 'ENTRY') { +{{ movement.quantity }} }
+              @else if (movement.type === 'EXIT') { -{{ movement.quantity }} }
+              @else { ={{ movement.quantity }} }
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="stock-value">{{ movement.previousStock }}</span>
+          </td>
+          <td class="text-center">
+            <span class="stock-value">{{ movement.newStock }}</span>
+          </td>
+          <td>
+            <span class="user-name">{{ movement.user.name }}</span>
+          </td>
+          <td class="text-center">
+            <div class="actions-cell">
+              <button class="btn-icon" title="Ver detalhes" (click)="openDetailModal(movement)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    <app-pagination
+      [meta]="movementService.paginationMeta()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    />
+    }
+  </div>
+</div>
+
+<!-- Modal Nova Movimentação -->
+@if (showModal()) {
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal modal-md" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3v18h18" />
+          <path d="m19 9-5 5-4-4-3 3" />
+        </svg>
+      </div>
+      <h2>Nova Movimentação</h2>
+      <p>Registre uma entrada, saída ou ajuste de estoque</p>
+    </div>
+
+    <form class="modal-form" (ngSubmit)="saveMovement()">
+      <!-- Tipo de movimentação -->
+      <div class="form-group">
+        <label>Tipo de Movimentação *</label>
+        <div class="type-selector">
+          @for (type of typeOptions; track type.value) {
+          <button
+            type="button"
+            class="type-option"
+            [class.active]="selectedType() === type.value"
+            [class]="'type-' + type.value.toLowerCase()"
+            (click)="onTypeChange(type.value)"
+          >
+            @if (type.value === 'ENTRY') {
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 19V5" />
+              <path d="m5 12 7-7 7 7" />
+            </svg>
+            } @else if (type.value === 'EXIT') {
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14" />
+              <path d="m19 12-7 7-7-7" />
+            </svg>
+            } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
+            }
+            <span>{{ type.label }}</span>
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Produto -->
+      <div class="form-group">
+        <label for="productId">Produto *</label>
+        <select
+          id="productId"
+          [ngModel]="selectedProductId()"
+          (ngModelChange)="selectedProductId.set($event)"
+          name="productId"
+          required
+        >
+          <option value="">Selecione um produto</option>
+          @for (product of products(); track product.id) {
+          <option [value]="product.id">{{ product.name }} ({{ product.sku }}) - Estoque: {{ product.currentStock }} {{ product.unit }}</option>
+          }
+        </select>
+      </div>
+
+      @if (selectedProductId()) {
+      <!-- Preview de alteração -->
+      <div class="stock-preview">
+        <div class="preview-current">
+          <span class="preview-label">Estoque Atual</span>
+          <span class="preview-value">{{ getProductStock() }}</span>
+        </div>
+        @if (getStockChangePreview(); as preview) {
+        <div class="preview-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </div>
+        <div class="preview-change" [class]="preview.class">
+          <span class="preview-label">Novo Estoque</span>
+          <span class="preview-value">{{ preview.value }}</span>
+          <span class="preview-delta">{{ preview.label }}</span>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Motivo -->
+      <div class="form-group">
+        <label for="reason">Motivo *</label>
+        <select
+          id="reason"
+          [ngModel]="selectedReason()"
+          (ngModelChange)="selectedReason.set($event)"
+          name="reason"
+          required
+        >
+          @for (reason of filteredReasons(); track reason.value) {
+          <option [value]="reason.value">{{ reason.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Quantidade -->
+      <div class="form-group">
+        <label for="quantity">
+          @if (selectedType() === 'ADJUSTMENT') {
+          Novo Estoque *
+          } @else {
+          Quantidade *
+          }
+        </label>
+        <input
+          type="number"
+          id="quantity"
+          [ngModel]="quantity()"
+          (ngModelChange)="quantity.set($event)"
+          name="quantity"
+          [placeholder]="selectedType() === 'ADJUSTMENT' ? 'Valor do novo estoque' : 'Quantidade a movimentar'"
+          min="1"
+          required
+        />
+        @if (selectedType() === 'EXIT' && selectedProductId() && quantity() > getProductStock()) {
+        <span class="field-error">Estoque insuficiente. Disponível: {{ getProductStock() }}</span>
+        }
+      </div>
+
+      <!-- Notas -->
+      <div class="form-group">
+        <label for="notes">Observações</label>
+        <textarea
+          id="notes"
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)"
+          name="notes"
+          placeholder="Adicione informações adicionais sobre a movimentação..."
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button
+          type="submit"
+          class="btn-primary"
+          [class]="'btn-' + selectedType().toLowerCase()"
+          [disabled]="!canSave() || movementService.isLoading()"
+        >
+          @if (movementService.isLoading()) {
+          <div class="spinner"></div>
+          Registrando...
+          } @else {
+          Registrar {{ getTypeLabel(selectedType()) }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Modal Detalhes -->
+@if (showDetailModal() && selectedMovement()) {
+<div class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal modal-md" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeDetailModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <div class="modal-header">
+      <div class="modal-icon" [class]="getTypeClass(selectedMovement()!.type)">
+        @if (selectedMovement()!.type === 'ENTRY') {
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 19V5" />
+          <path d="m5 12 7-7 7 7" />
+        </svg>
+        } @else if (selectedMovement()!.type === 'EXIT') {
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14" />
+          <path d="m19 12-7 7-7-7" />
+        </svg>
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        </svg>
+        }
+      </div>
+      <h2>Detalhes da Movimentação</h2>
+      <p>{{ getTypeLabel(selectedMovement()!.type) }} registrada em {{ formatDate(selectedMovement()!.createdAt) }}</p>
+    </div>
+
+    <div class="detail-content">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Produto</span>
+          <span class="detail-value">{{ selectedMovement()!.product.name }}</span>
+          <span class="detail-sub">SKU: {{ selectedMovement()!.product.sku }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Tipo</span>
+          <span class="type-badge large" [class]="getTypeClass(selectedMovement()!.type)">
+            {{ getTypeLabel(selectedMovement()!.type) }}
+          </span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Motivo</span>
+          <span class="detail-value">{{ getReasonLabel(selectedMovement()!.reason) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Quantidade</span>
+          <span class="quantity-badge large" [class]="getTypeClass(selectedMovement()!.type)">
+            @if (selectedMovement()!.type === 'ENTRY') { +{{ selectedMovement()!.quantity }} }
+            @else if (selectedMovement()!.type === 'EXIT') { -{{ selectedMovement()!.quantity }} }
+            @else { ={{ selectedMovement()!.quantity }} }
+          </span>
+        </div>
+      </div>
+
+      <div class="stock-change-detail">
+        <div class="stock-before">
+          <span class="stock-label">Estoque Anterior</span>
+          <span class="stock-value">{{ selectedMovement()!.previousStock }}</span>
+        </div>
+        <div class="stock-arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </div>
+        <div class="stock-after">
+          <span class="stock-label">Estoque Atual</span>
+          <span class="stock-value">{{ selectedMovement()!.newStock }}</span>
+        </div>
+      </div>
+
+      @if (selectedMovement()!.notes) {
+      <div class="detail-notes">
+        <span class="detail-label">Observações</span>
+        <p class="notes-text">{{ selectedMovement()!.notes }}</p>
+      </div>
+      }
+
+      <div class="detail-footer">
+        <span class="detail-meta">
+          Registrado por <strong>{{ selectedMovement()!.user.name }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeDetailModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+}
