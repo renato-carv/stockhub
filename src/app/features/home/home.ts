@@ -1,10 +1,11 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { OrganizationService, CreateOrganizationDto } from '../../core/services/organization.service';
 import { TeamService, CreateTeamDto } from '../../core/services/team.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { ToastService } from '../../core/services/toast.service';
 
 type OnboardingStep = 'welcome' | 'create-org' | 'create-team' | 'complete';
 
@@ -37,6 +38,8 @@ export class Home implements OnInit {
   teamDescription = signal('');
   teamLogoFile = signal<File | null>(null);
   teamLogoPreview = signal<string | null>(null);
+
+  private toastService = inject(ToastService);
 
   constructor(
     public authService: AuthService,
@@ -157,6 +160,10 @@ export class Home implements OnInit {
     this.organizationService.create(dto).subscribe({
       next: () => {
         this.currentStep.set('create-team');
+        this.toastService.success('Organização criada', 'Agora vamos criar sua primeira equipe.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao criar', 'Não foi possível criar a organização.');
       },
     });
   }
@@ -175,6 +182,10 @@ export class Home implements OnInit {
     this.teamService.create(orgId, dto).subscribe({
       next: () => {
         this.currentStep.set('complete');
+        this.toastService.success('Equipe criada', 'Tudo pronto! Você já pode começar a usar o sistema.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao criar', 'Não foi possível criar a equipe.');
       },
     });
   }
@@ -227,6 +238,10 @@ export class Home implements OnInit {
     this.organizationService.create(dto).subscribe({
       next: () => {
         this.modalStep.set('team');
+        this.toastService.success('Organização criada', 'Agora crie sua equipe.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao criar', 'Não foi possível criar a organização.');
       },
     });
   }
@@ -249,6 +264,10 @@ export class Home implements OnInit {
         if (teamId) {
           this.loadDashboard(teamId);
         }
+        this.toastService.success('Equipe criada', 'Você já pode começar a usar o sistema.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao criar', 'Não foi possível criar a equipe.');
       },
     });
   }

@@ -1,9 +1,10 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { CategoryService, Category as CategoryModel, CreateCategoryDto, UpdateCategoryDto } from '../../core/services/category.service';
 import { TeamService } from '../../core/services/team.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
 
 interface ImportRow {
@@ -67,6 +68,8 @@ export class Category implements OnInit {
   private getRandomColor(): string {
     return this.presetColors[Math.floor(Math.random() * this.presetColors.length)];
   }
+
+  private toastService = inject(ToastService);
 
   constructor(
     public categoryService: CategoryService,
@@ -162,6 +165,10 @@ export class Category implements OnInit {
         next: () => {
           this.closeModal();
           this.loadCategories();
+          this.toastService.success('Categoria atualizada', 'As alterações foram salvas com sucesso.');
+        },
+        error: () => {
+          this.toastService.error('Erro ao atualizar', 'Não foi possível atualizar a categoria.');
         },
       });
     } else {
@@ -169,6 +176,10 @@ export class Category implements OnInit {
         next: () => {
           this.closeModal();
           this.loadCategories();
+          this.toastService.success('Categoria criada', 'A nova categoria está disponível.');
+        },
+        error: () => {
+          this.toastService.error('Erro ao criar', 'Não foi possível criar a categoria.');
         },
       });
     }
@@ -194,6 +205,10 @@ export class Category implements OnInit {
       next: () => {
         this.closeDeleteModal();
         this.loadCategories();
+        this.toastService.success('Categoria removida', 'A categoria foi excluída com sucesso.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao remover', 'Não foi possível remover a categoria.');
       },
     });
   }
@@ -402,8 +417,15 @@ export class Category implements OnInit {
     try {
       const result = await firstValueFrom(this.categoryService.bulkCreate(teamId, categories));
       this.importResults.set({ success: result.created, errors: result.errors });
+      if (result.created > 0) {
+        this.toastService.success('Importação concluída', `${result.created} categoria(s) importada(s) com sucesso.`);
+      }
+      if (result.errors > 0) {
+        this.toastService.warning('Importação parcial', `${result.errors} categoria(s) não puderam ser importadas.`);
+      }
     } catch {
       this.importResults.set({ success: 0, errors: validRows.length });
+      this.toastService.error('Erro na importação', 'Não foi possível importar as categorias.');
     }
 
     this.importProgress.set(100);

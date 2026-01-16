@@ -1,10 +1,11 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ProductService, Product as ProductModel, CreateProductDto, UpdateProductDto } from '../../core/services/product.service';
 import { TeamService } from '../../core/services/team.service';
 import { CategoryService, Category, CreateCategoryDto } from '../../core/services/category.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
 
 interface ImportRow {
@@ -99,6 +100,8 @@ export class Product implements OnInit {
     { value: 'cx', label: 'Caixa (cx)' },
     { value: 'pc', label: 'Pacote (pc)' },
   ];
+
+  private toastService = inject(ToastService);
 
   constructor(
     public productService: ProductService,
@@ -242,6 +245,10 @@ export class Product implements OnInit {
         next: () => {
           this.closeModal();
           this.loadProducts();
+          this.toastService.success('Produto atualizado', 'As alterações foram salvas com sucesso.');
+        },
+        error: () => {
+          this.toastService.error('Erro ao atualizar', 'Não foi possível atualizar o produto.');
         },
       });
     } else {
@@ -249,6 +256,10 @@ export class Product implements OnInit {
         next: () => {
           this.closeModal();
           this.loadProducts();
+          this.toastService.success('Produto criado', 'O produto foi adicionado ao estoque.');
+        },
+        error: () => {
+          this.toastService.error('Erro ao criar', 'Não foi possível criar o produto.');
         },
       });
     }
@@ -275,6 +286,10 @@ export class Product implements OnInit {
       next: () => {
         this.closeDeleteModal();
         this.loadProducts();
+        this.toastService.success('Produto removido', 'O produto foi desativado com sucesso.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao remover', 'Não foi possível remover o produto.');
       },
     });
   }
@@ -346,6 +361,10 @@ export class Product implements OnInit {
       next: () => {
         this.closeCategoryModal();
         this.categoryService.getByTeam(teamId, { limit: 1000 }).subscribe();
+        this.toastService.success('Categoria criada', 'A nova categoria está disponível.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao criar', 'Não foi possível criar a categoria.');
       },
     });
   }
@@ -357,6 +376,10 @@ export class Product implements OnInit {
     this.categoryService.delete(teamId, categoryId).subscribe({
       next: () => {
         this.categoryService.getByTeam(teamId, { limit: 1000 }).subscribe();
+        this.toastService.success('Categoria removida', 'A categoria foi excluída.');
+      },
+      error: () => {
+        this.toastService.error('Erro ao remover', 'Não foi possível remover a categoria.');
       },
     });
   }
@@ -673,8 +696,15 @@ export class Product implements OnInit {
     try {
       const result = await firstValueFrom(this.productService.bulkCreate(teamId, products));
       this.importResults.set({ success: result.created, errors: result.errors });
+      if (result.created > 0) {
+        this.toastService.success('Importação concluída', `${result.created} produto(s) importado(s) com sucesso.`);
+      }
+      if (result.errors > 0) {
+        this.toastService.warning('Importação parcial', `${result.errors} produto(s) não puderam ser importados.`);
+      }
     } catch {
       this.importResults.set({ success: 0, errors: validRows.length });
+      this.toastService.error('Erro na importação', 'Não foi possível importar os produtos.');
     }
 
     this.importProgress.set(100);

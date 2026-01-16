@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, finalize } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ToastService } from './toast.service';
 
 export type ReportType = 'movements' | 'stock' | 'financial' | 'products';
 export type ExportFormat = 'pdf' | 'xlsx';
@@ -18,6 +19,7 @@ export interface GenerateReportDto {
 })
 export class ReportsService {
   private readonly apiUrl = environment.apiUrl;
+  private toastService = inject(ToastService);
 
   isGenerating = signal(false);
 
@@ -63,10 +65,12 @@ export class ReportsService {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+
+        const formatLabel = format === 'pdf' ? 'PDF' : 'Excel';
+        this.toastService.success('Relatório gerado', `O arquivo ${formatLabel} foi baixado com sucesso.`);
       },
-      error: (err) => {
-        console.error('Erro ao gerar relatório:', err);
-        alert('Erro ao gerar relatório. Tente novamente.');
+      error: () => {
+        this.toastService.error('Erro ao gerar relatório', 'Não foi possível gerar o relatório. Tente novamente.');
       },
     });
   }

@@ -77,45 +77,20 @@ export class CategoryService {
       })
       .pipe(
         tap((response: any) => {
-          // Suporte a diferentes formatos de resposta da API
-          const rawData = response.data ?? response.items ?? response;
-          const allData = Array.isArray(rawData) ? rawData : [];
+          const data = response.data ?? response.items ?? response;
+          const allData = Array.isArray(data) ? data : [];
 
-          // Filtrar por busca se necessário
-          let filteredData = allData;
-          if (params?.search) {
-            const searchLower = params.search.toLowerCase();
-            filteredData = allData.filter(cat =>
-              cat.name.toLowerCase().includes(searchLower) ||
-              cat.description?.toLowerCase().includes(searchLower)
-            );
-          }
+          this.allCategories.set(allData);
+          this.categories.set(allData);
 
-          // Verificar se a API já paginou (retornou menos que o total)
-          const apiAlreadyPaginated = response.meta && response.data && response.data.length < response.meta.total;
-
-          if (apiAlreadyPaginated) {
-            // API já fez a paginação
-            this.allCategories.set(allData);
-            this.categories.set(response.data);
+          if (response.meta) {
             this.paginationMeta.set(response.meta);
           } else {
-            // Fazer paginação no frontend
-            const page = params?.page ?? 1;
-            const limit = params?.limit ?? 10;
-            const total = filteredData.length;
-            const totalPages = Math.ceil(total / limit);
-            const startIndex = (page - 1) * limit;
-            const endIndex = startIndex + limit;
-            const paginatedData = filteredData.slice(startIndex, endIndex);
-
-            this.allCategories.set(allData);
-            this.categories.set(paginatedData);
             this.paginationMeta.set({
-              total,
-              page,
-              limit,
-              totalPages,
+              total: allData.length,
+              page: params?.page ?? 1,
+              limit: params?.limit ?? 10,
+              totalPages: Math.ceil(allData.length / (params?.limit ?? 10)),
             });
           }
 

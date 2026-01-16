@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -10,6 +10,7 @@ import {
 } from '../../core/services/stock-movement.service';
 import { ProductService, Product } from '../../core/services/product.service';
 import { TeamService } from '../../core/services/team.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
 
 @Component({
@@ -83,6 +84,8 @@ export class Movement implements OnInit {
     }
     return this.reasonOptions.filter(r => ['ADJUSTMENT', 'OTHER'].includes(r.value));
   });
+
+  private toastService = inject(ToastService);
 
   constructor(
     public movementService: StockMovementService,
@@ -220,14 +223,11 @@ export class Movement implements OnInit {
         this.loadMovements();
         // Recarregar produtos para atualizar estoque
         this.productService.getByTeam(teamId, { limit: 1000 }).subscribe();
+        const typeLabel = this.getTypeLabel(dto.type).toLowerCase();
+        this.toastService.success('Movimentação registrada', `${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)} de estoque realizada com sucesso.`);
       },
-      error: (err) => {
-        console.error('Erro ao criar movimentação:', err);
-        // Se deu erro, recarregar os dados para verificar se foi criado
-        // (pode acontecer race condition com refresh de token)
-        this.closeModal();
-        this.loadMovements();
-        this.productService.getByTeam(teamId, { limit: 1000 }).subscribe();
+      error: () => {
+        this.toastService.error('Erro na movimentação', 'Não foi possível registrar a movimentação de estoque.');
       },
     });
   }

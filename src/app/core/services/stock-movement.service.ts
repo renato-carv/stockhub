@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -75,58 +75,37 @@ export class StockMovementService {
   getByTeam(teamId: string, params?: PaginationParams): Observable<StockMovement[]> {
     this.isLoading.set(true);
 
+    let httpParams = new HttpParams();
+    if (params?.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params?.limit) httpParams = httpParams.set('limit', params.limit.toString());
+    if (params?.search) httpParams = httpParams.set('search', params.search);
+    if (params?.type) httpParams = httpParams.set('type', params.type);
+    if (params?.reason) httpParams = httpParams.set('reason', params.reason);
+    if (params?.productId) httpParams = httpParams.set('productId', params.productId);
+
     return this.http
       .get<StockMovement[]>(`${this.apiUrl}/teams/${teamId}/stock-movements`, {
         withCredentials: true,
+        params: httpParams,
       })
       .pipe(
         tap((response: any) => {
-          const rawData = Array.isArray(response) ? response : (response.data ?? response.items ?? []);
-          let filteredData = [...rawData];
+          const data = response.data ?? response.items ?? response;
+          const allData = Array.isArray(data) ? data : [];
 
-          // Filtrar por busca
-          if (params?.search) {
-            const searchLower = params.search.toLowerCase();
-            filteredData = filteredData.filter(m =>
-              m.product?.name?.toLowerCase().includes(searchLower) ||
-              m.product?.sku?.toLowerCase().includes(searchLower) ||
-              m.user?.name?.toLowerCase().includes(searchLower) ||
-              m.notes?.toLowerCase().includes(searchLower)
-            );
+          this.allMovements.set(allData);
+          this.movements.set(allData);
+
+          if (response.meta) {
+            this.paginationMeta.set(response.meta);
+          } else {
+            this.paginationMeta.set({
+              total: allData.length,
+              page: params?.page ?? 1,
+              limit: params?.limit ?? 10,
+              totalPages: Math.ceil(allData.length / (params?.limit ?? 10)),
+            });
           }
-
-          // Filtrar por tipo
-          if (params?.type) {
-            filteredData = filteredData.filter(m => m.type === params.type);
-          }
-
-          // Filtrar por motivo
-          if (params?.reason) {
-            filteredData = filteredData.filter(m => m.reason === params.reason);
-          }
-
-          // Filtrar por produto
-          if (params?.productId) {
-            filteredData = filteredData.filter(m => m.productId === params.productId);
-          }
-
-          // Paginação no frontend
-          const page = params?.page ?? 1;
-          const limit = params?.limit ?? 10;
-          const total = filteredData.length;
-          const totalPages = Math.ceil(total / limit);
-          const startIndex = (page - 1) * limit;
-          const endIndex = startIndex + limit;
-          const paginatedData = filteredData.slice(startIndex, endIndex);
-
-          this.allMovements.set(rawData);
-          this.movements.set(paginatedData);
-          this.paginationMeta.set({
-            total,
-            page,
-            limit,
-            totalPages,
-          });
 
           this.isLoading.set(false);
         })
