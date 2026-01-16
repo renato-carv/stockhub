@@ -18,9 +18,19 @@ export class Register {
   password = '';
   confirmPassword = '';
   acceptTerms = false;
+  showPassword = false;
+  showConfirmPassword = false;
 
   isLoading = this.authService.isLoading;
   error = this.authService.error;
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
 
   onSubmit() {
     if (!this.name || !this.email || !this.password || !this.confirmPassword) {
