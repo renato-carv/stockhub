@@ -183,15 +183,31 @@ export class ProductService {
       );
   }
 
-  delete(teamId: string, productId: string): Observable<void> {
+  delete(teamId: string, productId: string): Observable<Product> {
     this.isLoading.set(true);
     return this.http
-      .delete<void>(`${this.apiUrl}/teams/${teamId}/products/${productId}`, {
+      .patch<Product>(`${this.apiUrl}/teams/${teamId}/products/${productId}/deactivate`, {}, {
         withCredentials: true,
       })
       .pipe(
         tap(() => {
           this.products.update((products) => products.filter((p) => p.id !== productId));
+          this.allProducts.update((products) => products.filter((p) => p.id !== productId));
+          this.isLoading.set(false);
+        })
+      );
+  }
+
+  activate(teamId: string, productId: string): Observable<Product> {
+    this.isLoading.set(true);
+    return this.http
+      .patch<Product>(`${this.apiUrl}/teams/${teamId}/products/${productId}/activate`, {}, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap((product) => {
+          this.products.update((products) => [...products, product]);
+          this.allProducts.update((products) => [...products, product]);
           this.isLoading.set(false);
         })
       );
