@@ -97,6 +97,31 @@ export interface TopProducts {
   mostMovedIn: TopProduct[];
 }
 
+export interface ABCProduct {
+  id: string;
+  name: string;
+  sku: string;
+  totalValue: number;
+  percentageOfTotal: number;
+  cumulativePercentage: number;
+  classification: 'A' | 'B' | 'C';
+}
+
+export interface ABCSummary {
+  classACount: number;
+  classAPercentage: number;
+  classBCount: number;
+  classBPercentage: number;
+  classCCount: number;
+  classCPercentage: number;
+}
+
+export interface ABCAnalysis {
+  products: ABCProduct[];
+  summary: ABCSummary;
+  totalValue: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -178,5 +203,12 @@ export class DashboardService {
     let url = `${this.apiUrl}/teams/${teamId}/dashboard/activity/recent`;
     if (limit) url += `?limit=${limit}`;
     return this.http.get<RecentActivity[]>(url, { withCredentials: true });
+  }
+
+  getABCAnalysis(teamId: string): Observable<ABCAnalysis> {
+    return this.http.get<ABCAnalysis>(
+      `${this.apiUrl}/teams/${teamId}/dashboard/products/abc`,
+      { withCredentials: true }
+    );
   }
 }

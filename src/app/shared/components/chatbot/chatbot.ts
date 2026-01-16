@@ -1,6 +1,8 @@
-import { Component, signal, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, AfterViewChecked, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../core/services/auth.service';
+import { TeamService } from '../../../core/services/team.service';
 
 export interface ChatMessage {
   id: string;
@@ -17,6 +19,14 @@ export interface ChatMessage {
 })
 export class Chatbot implements AfterViewChecked {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+
+  private authService = inject(AuthService);
+  private teamService = inject(TeamService);
+
+  // Only show chatbot when user is logged in and has a team selected
+  shouldShow = computed(() => {
+    return this.authService.isAuthenticated() && !!this.teamService.currentTeam();
+  });
 
   isOpen = signal(false);
   isLoading = signal(false);

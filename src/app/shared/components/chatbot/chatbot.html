@@ -1,5 +1,5 @@
-<!-- Floating Button (hidden when chat is open) -->
-@if (!isOpen()) {
+<!-- Floating Button (only shown when user is logged in with a team) -->
+@if (shouldShow() && !isOpen()) {
   <button
     class="chatbot-toggle"
     (click)="toggleChat()"
@@ -10,7 +10,7 @@
 }
 
 <!-- Chat Window -->
-@if (isOpen()) {
+@if (shouldShow() && isOpen()) {
   <div class="chatbot-window">
     <!-- Header -->
     <div class="chatbot-header">
