@@ -12,10 +12,11 @@ import { ProductService, Product } from '../../core/services/product.service';
 import { TeamService } from '../../core/services/team.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
+import { ExportToExcel } from '../../shared/components/export-to-excel/export-to-excel';
 
 @Component({
   selector: 'app-movement',
-  imports: [CommonModule, FormsModule, Pagination],
+  imports: [CommonModule, FormsModule, Pagination, ExportToExcel],
   templateUrl: './movement.html',
   styleUrl: './movement.css',
 })
@@ -74,6 +75,30 @@ export class Movement implements OnInit {
     { value: 'OTHER', label: 'Outro' },
   ];
 
+  // Mapper para exportação Excel
+  exportMapper = (movement: StockMovement) => ({
+    'Produto': movement.product.name,
+    'SKU': movement.product.sku,
+    'Tipo': this.getTypeLabel(movement.type),
+    'Motivo': this.getReasonLabel(movement.reason),
+    'Quantidade': movement.type === 'ENTRY' ? `+${movement.quantity}` : movement.type === 'EXIT' ? `-${movement.quantity}` : `=${movement.quantity}`,
+    'Estoque Anterior': movement.previousStock,
+    'Estoque Novo': movement.newStock,
+    'Usuário': movement.user.name,
+    'Observações': movement.notes || '',
+    'Data/Hora': this.formatExportDate(movement.createdAt),
+  });
+
+  formatExportDate(date: string | Date): string {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
   // Motivos filtrados por tipo
   filteredReasons = computed(() => {
     const type = this.selectedType();
@@ -103,6 +128,8 @@ export class Movement implements OnInit {
       this.loadMovements();
       // Carregar produtos para o select
       this.productService.getByTeam(teamId, { limit: 1000 }).subscribe();
+      // Carrega todos os movimentos para exportação e stats
+      this.movementService.getAllForExport(teamId).subscribe();
     }
   }
 

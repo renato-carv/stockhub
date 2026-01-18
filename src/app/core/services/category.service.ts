@@ -80,7 +80,6 @@ export class CategoryService {
           const data = response.data ?? response.items ?? response;
           const allData = Array.isArray(data) ? data : [];
 
-          this.allCategories.set(allData);
           this.categories.set(allData);
 
           if (response.meta) {
@@ -152,6 +151,21 @@ export class CategoryService {
       .pipe(
         tap(() => {
           this.isLoading.set(false);
+        })
+      );
+  }
+
+  getAllForExport(teamId: string): Observable<Category[]> {
+    return this.http
+      .get<PaginatedResponse<Category>>(`${this.apiUrl}/teams/${teamId}/categories`, {
+        withCredentials: true,
+        params: new HttpParams().set('limit', '10000'),
+      })
+      .pipe(
+        tap((response: any) => {
+          const data = response.data ?? response.items ?? response;
+          const allData = Array.isArray(data) ? data : [];
+          this.allCategories.set(allData);
         })
       );
   }

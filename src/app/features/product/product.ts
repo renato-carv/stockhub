@@ -7,6 +7,7 @@ import { TeamService } from '../../core/services/team.service';
 import { CategoryService, Category, CreateCategoryDto } from '../../core/services/category.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
+import { ExportToExcel } from "../../shared/components/export-to-excel/export-to-excel";
 
 interface ImportRow {
   name: string;
@@ -27,7 +28,7 @@ interface ImportRow {
 
 @Component({
   selector: 'app-product',
-  imports: [CommonModule, FormsModule, Pagination],
+  imports: [CommonModule, FormsModule, Pagination, ExportToExcel],
   templateUrl: './product.html',
   styleUrl: './product.css',
 })
@@ -101,6 +102,33 @@ export class Product implements OnInit {
     { value: 'pc', label: 'Pacote (pc)' },
   ];
 
+  // Mapper para exportação Excel
+  exportMapper = (product: ProductModel) => ({
+    'Nome': product.name,
+    'SKU': product.sku,
+    'Descrição': product.description || '',
+    'Código de Barras': product.barcode || '',
+    'Categoria': this.getCategoryName(product.categoryId ?? undefined),
+    'Unidade': product.unit,
+    'Estoque Atual': product.currentStock,
+    'Estoque Mínimo': product.minStock,
+    'Estoque Máximo': product.maxStock || '',
+    'Preço de Custo': product.costPrice ?? 0,
+    'Preço de Venda': product.salePrice ?? 0,
+    'Criado em': this.formatExportDate(product.createdAt),
+  });
+
+  formatExportDate(date: string | Date | undefined): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
   private toastService = inject(ToastService);
 
   constructor(
@@ -118,6 +146,8 @@ export class Product implements OnInit {
     if (teamId) {
       this.loadProducts();
       this.categoryService.getByTeam(teamId, { limit: 1000 }).subscribe();
+      // Carrega todos os produtos para exportação e stats
+      this.productService.getAllForExport(teamId).subscribe();
     }
   }
 

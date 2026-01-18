@@ -6,6 +6,12 @@
       <p class="header-subtitle">Organize seus produtos em categorias</p>
     </div>
     <div class="header-actions">
+      <app-export-to-excel
+        [data]="categoryService.allCategories()"
+        [mapper]="exportMapper"
+        fileName="categorias-stockhub"
+        sheetName="Categorias"
+      ></app-export-to-excel>
       <button class="btn-secondary" (click)="openImportModal()">
         <svg
           xmlns="http://www.w3.org/2000/svg"

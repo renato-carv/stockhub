@@ -6,6 +6,7 @@ import { CategoryService, Category as CategoryModel, CreateCategoryDto, UpdateCa
 import { TeamService } from '../../core/services/team.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
+import { ExportToExcel } from '../../shared/components/export-to-excel/export-to-excel';
 
 interface ImportRow {
   name: string;
@@ -17,7 +18,7 @@ interface ImportRow {
 
 @Component({
   selector: 'app-category',
-  imports: [CommonModule, FormsModule, Pagination],
+  imports: [CommonModule, FormsModule, Pagination, ExportToExcel],
   templateUrl: './category.html',
   styleUrl: './category.css',
 })
@@ -64,6 +65,24 @@ export class Category implements OnInit {
     '#f59e0b', '#10b981', '#06b6d4', '#3b82f6',
   ];
 
+  // Mapper para exportação Excel
+  exportMapper = (category: CategoryModel) => ({
+    'Nome': category.name,
+    'Descrição': category.description || '',
+    'Cor': category.color || '',
+    'Criado em': this.formatExportDate(category.createdAt),
+  });
+
+  formatExportDate(date: string | Date): string {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
   // Gerar cor aleatória das cores predefinidas
   private getRandomColor(): string {
     return this.presetColors[Math.floor(Math.random() * this.presetColors.length)];
@@ -78,6 +97,11 @@ export class Category implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
+    // Carrega todas as categorias para exportação
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      this.categoryService.getAllForExport(teamId).subscribe();
+    }
   }
 
   private loadCategories(): void {

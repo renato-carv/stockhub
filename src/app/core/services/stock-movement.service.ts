@@ -93,7 +93,6 @@ export class StockMovementService {
           const data = response.data ?? response.items ?? response;
           const allData = Array.isArray(data) ? data : [];
 
-          this.allMovements.set(allData);
           this.movements.set(allData);
 
           if (response.meta) {
@@ -143,6 +142,21 @@ export class StockMovementService {
         }),
         finalize(() => {
           this.isLoading.set(false);
+        })
+      );
+  }
+
+  getAllForExport(teamId: string): Observable<StockMovement[]> {
+    return this.http
+      .get<StockMovement[]>(`${this.apiUrl}/teams/${teamId}/stock-movements`, {
+        withCredentials: true,
+        params: new HttpParams().set('limit', '10000'),
+      })
+      .pipe(
+        tap((response: any) => {
+          const data = response.data ?? response.items ?? response;
+          const allData = Array.isArray(data) ? data : [];
+          this.allMovements.set(allData);
         })
       );
   }

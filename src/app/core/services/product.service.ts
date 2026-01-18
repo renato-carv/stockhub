@@ -102,7 +102,6 @@ export class ProductService {
           const data = response.data ?? response.items ?? response;
           const allData = Array.isArray(data) ? data : [];
 
-          this.allProducts.set(allData);
           this.products.set(allData);
 
           if (response.meta) {
@@ -203,6 +202,21 @@ export class ProductService {
       .pipe(
         tap(() => {
           this.isLoading.set(false);
+        })
+      );
+  }
+
+  getAllForExport(teamId: string): Observable<Product[]> {
+    return this.http
+      .get<PaginatedResponse<Product>>(`${this.apiUrl}/teams/${teamId}/products`, {
+        withCredentials: true,
+        params: new HttpParams().set('limit', '10000'),
+      })
+      .pipe(
+        tap((response: any) => {
+          const data = response.data ?? response.items ?? response;
+          const allData = Array.isArray(data) ? data : [];
+          this.allProducts.set(allData);
         })
       );
   }
