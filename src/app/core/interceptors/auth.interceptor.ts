@@ -9,7 +9,7 @@ let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<boolean | null>(null);
 
 // Rotas de autenticação que não devem triggerar refresh nem redirecionar
-const AUTH_ROUTES = ['/auth/login', '/auth/register', '/auth/logout', '/auth/refresh', '/auth/me'];
+const AUTH_ROUTES = ['/auth/login', '/auth/register', '/auth/logout', '/auth/refresh'];
 
 function isAuthRoute(url: string): boolean {
   return AUTH_ROUTES.some(route => url.includes(route));

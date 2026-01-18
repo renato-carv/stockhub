@@ -1,12 +1,20 @@
-import { Component, signal, ElementRef, ViewChild, AfterViewChecked, inject, computed, OnDestroy, effect, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  ElementRef,
+  ViewChild,
+  AfterViewChecked,
+  inject,
+  OnDestroy,
+  OnInit,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, NavigationEnd } from '@angular/router';
 import { MarkdownComponent } from 'ngx-markdown';
-import { Subscription, filter } from 'rxjs';
-import { AuthService } from '../../../core/services/auth.service';
-import { TeamService } from '../../../core/services/team.service';
-import { AiService } from '../../../core/services/ai.service';
+import { Subscription } from 'rxjs';
+import { TeamService } from '../../core/services/team.service';
+import { AiService } from '../../core/services/ai.service';
 
 export interface ChatMessage {
   id: string;
@@ -15,40 +23,34 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+// Mesma chave usada no chatbot flutuante
 const STORAGE_KEY = 'hubi_chat_history';
 const MAX_STORED_MESSAGES = 50;
 
 @Component({
-  selector: 'app-chatbot',
+  selector: 'app-chat',
   imports: [CommonModule, FormsModule, MarkdownComponent],
-  templateUrl: './chatbot.html',
-  styleUrl: './chatbot.css',
+  templateUrl: './chat.html',
+  styleUrl: './chat.css',
 })
-export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
+export class Chat implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+  @ViewChild('inputField') private inputField!: ElementRef<HTMLTextAreaElement>;
 
-  private authService = inject(AuthService);
   private teamService = inject(TeamService);
   private aiService = inject(AiService);
-  private router = inject(Router);
   private chatSubscription: Subscription | null = null;
-  private routerSubscription: Subscription | null = null;
 
-  private currentRoute = signal('');
-
-  shouldShow = computed(() => {
-    const isOnChatPage = this.currentRoute() === '/chat';
-    return this.authService.isAuthenticated() && !!this.teamService.currentTeam() && !isOnChatPage;
-  });
-
-  isOpen = signal(false);
   isLoading = signal(false);
   messages = signal<ChatMessage[]>([]);
+  showScrollButton = signal(false);
   inputMessage = '';
 
   private shouldScroll = false;
+  private userScrolledUp = false;
 
   constructor() {
+    // Salva no localStorage quando mensagens mudam
     effect(() => {
       const msgs = this.messages();
       const teamId = this.teamService.currentTeam()?.id;
@@ -59,12 +61,7 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.currentRoute.set(this.router.url);
-    this.routerSubscription = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event) => {
-        this.currentRoute.set((event as NavigationEnd).url);
-      });
+    this.loadFromStorage();
   }
 
   ngAfterViewChecked(): void {
@@ -72,23 +69,11 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
       this.scrollToBottom();
       this.shouldScroll = false;
     }
-  }
-
-  toggleChat(): void {
-    this.isOpen.update((open) => !open);
-
-    if (this.isOpen() && this.messages().length === 0) {
-      this.loadFromStorage();
-    }
-  }
-
-  closeChat(): void {
-    this.isOpen.set(false);
+    this.autoResizeTextarea();
   }
 
   ngOnDestroy(): void {
     this.chatSubscription?.unsubscribe();
-    this.routerSubscription?.unsubscribe();
   }
 
   sendMessage(): void {
@@ -98,7 +83,7 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
     const teamId = this.teamService.currentTeam()?.id;
     if (!teamId) return;
 
-    // Adiciona mensagem do usuário
+    // Add user message
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -109,12 +94,13 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
     this.messages.update((msgs) => [...msgs, userMessage]);
     this.inputMessage = '';
     this.shouldScroll = true;
+    this.userScrolledUp = false; // Reset quando envia nova mensagem
     this.isLoading.set(true);
+    this.resetTextareaHeight();
 
-    // Cria mensagem do assistente vazia para streaming
-    const assistantMessageId = crypto.randomUUID();
+    // Create empty assistant message for streaming
     const assistantMessage: ChatMessage = {
-      id: assistantMessageId,
+      id: crypto.randomUUID(),
       role: 'assistant',
       content: '',
       timestamp: new Date(),
@@ -122,10 +108,10 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
 
     this.messages.update((msgs) => [...msgs, assistantMessage]);
 
-    // Cancela subscription anterior se existir
+    // Cancel previous subscription
     this.chatSubscription?.unsubscribe();
 
-    // Chama a API com streaming
+    // Call API with streaming
     let accumulatedContent = '';
 
     this.chatSubscription = this.aiService.chat(teamId, message).subscribe({
@@ -134,19 +120,58 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
           this.updateLastMessage('Desculpe, ocorreu um erro. Tente novamente.');
           return;
         }
-        // Acumula o conteúdo conforme chega
         accumulatedContent += chunk.content;
         this.updateLastMessage(accumulatedContent);
-        this.shouldScroll = true;
+        // Só faz auto-scroll se o usuário não rolou para cima
+        if (!this.userScrolledUp) {
+          this.shouldScroll = true;
+        }
       },
       error: () => {
-        this.updateLastMessage('Desculpe, não foi possível conectar ao assistente. Verifique se o serviço está disponível.');
+        this.updateLastMessage(
+          'Desculpe, não foi possível conectar ao assistente. Verifique se o serviço está disponível.'
+        );
         this.isLoading.set(false);
       },
       complete: () => {
         this.isLoading.set(false);
       },
     });
+  }
+
+  sendSuggestion(text: string): void {
+    this.inputMessage = text;
+    this.sendMessage();
+  }
+
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  clearChat(): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      localStorage.removeItem(this.getStorageKey(teamId));
+    }
+    this.messages.set([]);
+  }
+
+  onMessagesScroll(): void {
+    if (this.messagesContainer) {
+      const element = this.messagesContainer.nativeElement;
+      const threshold = 100;
+      const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+      this.showScrollButton.set(!isNearBottom);
+      this.userScrolledUp = !isNearBottom;
+    }
+  }
+
+  scrollToBottomClick(): void {
+    this.scrollToBottom();
+    this.showScrollButton.set(false);
   }
 
   private updateLastMessage(content: string): void {
@@ -162,29 +187,27 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.sendMessage();
-    }
-  }
-
-  private addWelcomeMessage(): void {
-    const welcomeMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content:
-        'Olá! Sou o Hubi, seu assistente de estoque. Posso ajudar você com informações sobre produtos, movimentações e relatórios. Como posso ajudar?',
-      timestamp: new Date(),
-    };
-
-    this.messages.set([welcomeMessage]);
-  }
-
   private scrollToBottom(): void {
     if (this.messagesContainer) {
       const element = this.messagesContainer.nativeElement;
-      element.scrollTop = element.scrollHeight;
+      element.scrollTo({
+        top: element.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  private autoResizeTextarea(): void {
+    if (this.inputField) {
+      const textarea = this.inputField.nativeElement;
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+  }
+
+  private resetTextareaHeight(): void {
+    if (this.inputField) {
+      this.inputField.nativeElement.style.height = 'auto';
     }
   }
 
@@ -194,10 +217,7 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
 
   private loadFromStorage(): void {
     const teamId = this.teamService.currentTeam()?.id;
-    if (!teamId) {
-      this.addWelcomeMessage();
-      return;
-    }
+    if (!teamId) return;
 
     const stored = localStorage.getItem(this.getStorageKey(teamId));
     if (stored) {
@@ -208,22 +228,11 @@ export class Chatbot implements OnInit, AfterViewChecked, OnDestroy {
       }));
       this.messages.set(messages);
       this.shouldScroll = true;
-    } else {
-      this.addWelcomeMessage();
     }
   }
 
   private saveToStorage(teamId: string, messages: ChatMessage[]): void {
     const toStore = messages.slice(-MAX_STORED_MESSAGES);
     localStorage.setItem(this.getStorageKey(teamId), JSON.stringify(toStore));
-  }
-
-  clearChat(): void {
-    const teamId = this.teamService.currentTeam()?.id;
-    if (teamId) {
-      localStorage.removeItem(this.getStorageKey(teamId));
-    }
-    this.messages.set([]);
-    this.addWelcomeMessage();
   }
 }

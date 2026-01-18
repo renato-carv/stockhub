@@ -34,6 +34,7 @@ export const routes: Routes = [
       { path: 'categories', loadComponent: () => import('./features/category/category').then((m) => m.Category) },
       { path: 'movements', loadComponent: () => import('./features/movement/movement').then((m) => m.Movement) },
       { path: 'reports', loadComponent: () => import('./features/reports/reports').then((m) => m.Reports) },
+      { path: 'chat', loadComponent: () => import('./features/chat/chat').then((m) => m.Chat) },
     ],
   },
 ];
