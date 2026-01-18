@@ -109,7 +109,12 @@
   border-radius: 50%;
 }
 
-.close-btn {
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.header-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   border-radius: 8px;
@@ -122,7 +127,7 @@
   transition: background 0.2s;
 }
 
-.close-btn:hover {
+.header-btn:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 

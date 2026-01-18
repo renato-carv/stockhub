@@ -1,4 +1,4 @@
-import { Component, signal, ElementRef, ViewChild, AfterViewChecked, inject, computed, OnDestroy } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, AfterViewChecked, inject, computed, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MarkdownComponent } from 'ngx-markdown';
@@ -13,6 +13,9 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
 }
+
+const STORAGE_KEY = 'hubi_chat_history';
+const MAX_STORED_MESSAGES = 50;
 
 @Component({
   selector: 'app-chatbot',
@@ -39,6 +42,16 @@ export class Chatbot implements AfterViewChecked, OnDestroy {
 
   private shouldScroll = false;
 
+  constructor() {
+    effect(() => {
+      const msgs = this.messages();
+      const teamId = this.teamService.currentTeam()?.id;
+      if (teamId && msgs.length > 0) {
+        this.saveToStorage(teamId, msgs);
+      }
+    });
+  }
+
   ngAfterViewChecked(): void {
     if (this.shouldScroll) {
       this.scrollToBottom();
@@ -50,7 +63,7 @@ export class Chatbot implements AfterViewChecked, OnDestroy {
     this.isOpen.update((open) => !open);
 
     if (this.isOpen() && this.messages().length === 0) {
-      this.addWelcomeMessage();
+      this.loadFromStorage();
     }
   }
 
@@ -157,5 +170,44 @@ export class Chatbot implements AfterViewChecked, OnDestroy {
       const element = this.messagesContainer.nativeElement;
       element.scrollTop = element.scrollHeight;
     }
+  }
+
+  private getStorageKey(teamId: string): string {
+    return `${STORAGE_KEY}_${teamId}`;
+  }
+
+  private loadFromStorage(): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (!teamId) {
+      this.addWelcomeMessage();
+      return;
+    }
+
+    const stored = localStorage.getItem(this.getStorageKey(teamId));
+    if (stored) {
+      const parsed = JSON.parse(stored) as ChatMessage[];
+      const messages = parsed.map((msg) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp),
+      }));
+      this.messages.set(messages);
+      this.shouldScroll = true;
+    } else {
+      this.addWelcomeMessage();
+    }
+  }
+
+  private saveToStorage(teamId: string, messages: ChatMessage[]): void {
+    const toStore = messages.slice(-MAX_STORED_MESSAGES);
+    localStorage.setItem(this.getStorageKey(teamId), JSON.stringify(toStore));
+  }
+
+  clearChat(): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      localStorage.removeItem(this.getStorageKey(teamId));
+    }
+    this.messages.set([]);
+    this.addWelcomeMessage();
   }
 }
