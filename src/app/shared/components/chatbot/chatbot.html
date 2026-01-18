@@ -3,9 +3,9 @@
   <button
     class="chatbot-toggle"
     (click)="toggleChat()"
-    aria-label="Abrir assistente"
+    aria-label="Abrir Hubi"
   >
-    <img src="logistics.svg" alt="Assistente" class="bot-icon" />
+    <img src="logistics.svg" alt="Hubi" class="bot-icon" />
   </button>
 }
 
@@ -15,9 +15,9 @@
     <!-- Header -->
     <div class="chatbot-header">
       <div class="header-info">
-        <img src="logistics.svg" alt="Assistente" class="header-icon" />
+        <img src="logistics.svg" alt="Hubi" class="header-icon" />
         <div class="header-text">
-          <span class="header-title">Assistente StockHub</span>
+          <span class="header-title">Hubi</span>
           <span class="header-status">Online</span>
         </div>
       </div>
@@ -38,26 +38,26 @@
               <img src="logistics.svg" alt="Bot" />
             </div>
           }
-          <div class="message-content">
-            <p>{{ message.content }}</p>
-            <span class="message-time">
-              {{ message.timestamp | date:'HH:mm' }}
-            </span>
-          </div>
-        </div>
-      }
-
-      @if (isLoading()) {
-        <div class="message assistant">
-          <div class="message-avatar">
-            <img src="logistics.svg" alt="Bot" />
-          </div>
-          <div class="message-content typing">
-            <div class="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+          <div class="message-content" [class.typing]="message.role === 'assistant' && !message.content && isLoading()">
+            @if (message.role === 'assistant') {
+              @if (!message.content && isLoading()) {
+                <div class="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              } @else {
+                <markdown [data]="message.content"></markdown>
+                <span class="message-time">
+                  {{ message.timestamp | date:'HH:mm' }}
+                </span>
+              }
+            } @else {
+              <p>{{ message.content }}</p>
+              <span class="message-time">
+                {{ message.timestamp | date:'HH:mm' }}
+              </span>
+            }
           </div>
         </div>
       }

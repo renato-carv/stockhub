@@ -1,8 +1,11 @@
-import { Component, signal, ElementRef, ViewChild, AfterViewChecked, inject, computed } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, AfterViewChecked, inject, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MarkdownComponent } from 'ngx-markdown';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { TeamService } from '../../../core/services/team.service';
+import { AiService } from '../../../core/services/ai.service';
 
 export interface ChatMessage {
   id: string;
@@ -13,17 +16,18 @@ export interface ChatMessage {
 
 @Component({
   selector: 'app-chatbot',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownComponent],
   templateUrl: './chatbot.html',
   styleUrl: './chatbot.css',
 })
-export class Chatbot implements AfterViewChecked {
+export class Chatbot implements AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   private authService = inject(AuthService);
   private teamService = inject(TeamService);
+  private aiService = inject(AiService);
+  private chatSubscription: Subscription | null = null;
 
-  // Only show chatbot when user is logged in and has a team selected
   shouldShow = computed(() => {
     return this.authService.isAuthenticated() && !!this.teamService.currentTeam();
   });
@@ -54,10 +58,18 @@ export class Chatbot implements AfterViewChecked {
     this.isOpen.set(false);
   }
 
-  async sendMessage(): Promise<void> {
+  ngOnDestroy(): void {
+    this.chatSubscription?.unsubscribe();
+  }
+
+  sendMessage(): void {
     const message = this.inputMessage.trim();
     if (!message || this.isLoading()) return;
 
+    const teamId = this.teamService.currentTeam()?.id;
+    if (!teamId) return;
+
+    // Adiciona mensagem do usuário
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -70,20 +82,55 @@ export class Chatbot implements AfterViewChecked {
     this.shouldScroll = true;
     this.isLoading.set(true);
 
-    // TODO: Integrar com API de IA
-    // Por enquanto, resposta mockada
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: this.getMockResponse(message),
-        timestamp: new Date(),
-      };
+    // Cria mensagem do assistente vazia para streaming
+    const assistantMessageId = crypto.randomUUID();
+    const assistantMessage: ChatMessage = {
+      id: assistantMessageId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+    };
 
-      this.messages.update((msgs) => [...msgs, assistantMessage]);
-      this.shouldScroll = true;
-      this.isLoading.set(false);
-    }, 1000);
+    this.messages.update((msgs) => [...msgs, assistantMessage]);
+
+    // Cancela subscription anterior se existir
+    this.chatSubscription?.unsubscribe();
+
+    // Chama a API com streaming
+    let accumulatedContent = '';
+
+    this.chatSubscription = this.aiService.chat(teamId, message).subscribe({
+      next: (chunk) => {
+        if (chunk.error) {
+          this.updateLastMessage('Desculpe, ocorreu um erro. Tente novamente.');
+          return;
+        }
+        // Acumula o conteúdo conforme chega
+        accumulatedContent += chunk.content;
+        this.updateLastMessage(accumulatedContent);
+        this.shouldScroll = true;
+      },
+      error: () => {
+        this.updateLastMessage('Desculpe, não foi possível conectar ao assistente. Verifique se o serviço está disponível.');
+        this.isLoading.set(false);
+      },
+      complete: () => {
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  private updateLastMessage(content: string): void {
+    this.messages.update((msgs) => {
+      const updated = [...msgs];
+      if (updated.length > 0) {
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          content,
+        };
+      }
+      return updated;
+    });
   }
 
   onKeyDown(event: KeyboardEvent): void {
@@ -98,29 +145,11 @@ export class Chatbot implements AfterViewChecked {
       id: crypto.randomUUID(),
       role: 'assistant',
       content:
-        'Olá! Sou o assistente do StockHub. Posso ajudar você com informações sobre seu estoque, movimentações e relatórios. Como posso ajudar?',
+        'Olá! Sou o Hubi, seu assistente de estoque. Posso ajudar você com informações sobre produtos, movimentações e relatórios. Como posso ajudar?',
       timestamp: new Date(),
     };
 
     this.messages.set([welcomeMessage]);
-  }
-
-  private getMockResponse(message: string): string {
-    const lowerMessage = message.toLowerCase();
-
-    if (lowerMessage.includes('estoque') || lowerMessage.includes('produto')) {
-      return 'Para verificar informações de estoque, você pode acessar a página de Produtos ou o Dashboard. Posso te ajudar com algo mais específico?';
-    }
-
-    if (lowerMessage.includes('movimentação') || lowerMessage.includes('entrada') || lowerMessage.includes('saída')) {
-      return 'As movimentações de estoque podem ser visualizadas na página de Movimentações. Lá você pode ver entradas, saídas e ajustes realizados.';
-    }
-
-    if (lowerMessage.includes('relatório')) {
-      return 'Os relatórios estão disponíveis na aba Relatórios. Em breve teremos análises inteligentes com IA para te ajudar a entender melhor seus dados!';
-    }
-
-    return 'Entendi sua pergunta. Em breve terei integração completa com IA para te dar respostas mais precisas sobre seu estoque. Por enquanto, posso te direcionar para as páginas corretas do sistema.';
   }
 
   private scrollToBottom(): void {
