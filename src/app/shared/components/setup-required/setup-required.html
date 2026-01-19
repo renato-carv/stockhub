@@ -1,0 +1,53 @@
+<!-- Setup Required - Onboarding Content -->
+<div class="setup-container">
+  <div class="setup-card">
+    <div class="welcome-animation">
+      <div class="floating-icons">
+        <div class="icon icon-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m7.5 4.27 9 5.15"/>
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          </svg>
+        </div>
+        <div class="icon icon-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="icon icon-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+      </div>
+      <div class="welcome-icon">
+        <img src="logo-white.svg" alt="StockHub Logo" />
+      </div>
+    </div>
+
+    <h1>Bem-vindo ao StockHub!</h1>
+
+    @if (!hasOrganization()) {
+      <p class="welcome-description">
+        Para começar a gerenciar seu estoque de forma inteligente, você precisa criar ou participar de uma organização.
+      </p>
+    } @else if (!hasTeam()) {
+      <p class="welcome-description">
+        Você já tem uma organização! Agora, crie sua primeira equipe para começar a gerenciar o estoque.
+      </p>
+    }
+
+    <div class="form-actions">
+      <button class="btn-primary btn-large" (click)="startSetup()">
+        Começar Configuração
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,7 @@
 import {
   Component,
   signal,
+  computed,
   ElementRef,
   ViewChild,
   AfterViewChecked,
@@ -13,7 +14,9 @@ import { FormsModule } from '@angular/forms';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Subscription } from 'rxjs';
 import { TeamService } from '../../core/services/team.service';
+import { OrganizationService } from '../../core/services/organization.service';
 import { ChatService } from '../../core/services/chat.service';
+import { SetupRequired } from '../../shared/components/setup-required/setup-required';
 
 export interface ChatMessage {
   id: string;
@@ -24,7 +27,7 @@ export interface ChatMessage {
 
 @Component({
   selector: 'app-chat',
-  imports: [CommonModule, FormsModule, MarkdownComponent],
+  imports: [CommonModule, FormsModule, MarkdownComponent, SetupRequired],
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
@@ -33,6 +36,12 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('inputField') private inputField!: ElementRef<HTMLTextAreaElement>;
 
   private teamService = inject(TeamService);
+  private organizationService = inject(OrganizationService);
+
+  // Verificar se setup está completo
+  isSetupComplete = computed(() => {
+    return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
+  });
   chatService = inject(ChatService);
   private chatSubscription: Subscription | null = null;
 

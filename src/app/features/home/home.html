@@ -1,39 +1,14 @@
-<div class="home-container">
-  <main class="main-content">
-    <!-- Loading State -->
-    @if (organizationService.isLoading()) {
-      <div class="loading-state">
-        <div class="spinner-large"></div>
-        <p>Carregando...</p>
-      </div>
-    } @else {
-      <!-- Usuário pulou onboarding e não tem organização -->
-      @if (skippedOnboarding() && !showDashboard()) {
-        <div class="empty-dashboard-container">
-          <div class="empty-dashboard-card">
-            <div class="empty-dashboard-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
-                <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
-                <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
-                <path d="M10 6h4"/>
-                <path d="M10 10h4"/>
-                <path d="M10 14h4"/>
-                <path d="M10 18h4"/>
-              </svg>
-            </div>
-            <h2>Você ainda não faz parte de uma organização</h2>
-            <p>Para acessar o dashboard e gerenciar seu estoque, você precisa criar ou fazer parte de uma organização e equipe.</p>
-            <button class="btn-primary" (click)="openCreateOrgModal()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14"/>
-                <path d="M5 12h14"/>
-              </svg>
-              Criar Organização
-            </button>
-          </div>
-        </div>
-      } @else if (!showDashboard()) {
+<!-- Loading State -->
+@if (organizationService.isLoading()) {
+  <div class="loading-state">
+    <div class="spinner-large"></div>
+    <p>Carregando...</p>
+  </div>
+} @else {
+  <!-- Skipped - Show SetupRequired -->
+  @if (currentStep() === 'skipped') {
+    <app-setup-required />
+  } @else if (!showDashboard()) {
         <!-- Onboarding Flow -->
         <div class="onboarding-container">
           <!-- Welcome Step -->
@@ -79,9 +54,6 @@
                     <path d="M5 12h14"/>
                     <path d="m12 5 7 7-7 7"/>
                   </svg>
-                </button>
-                <button class="btn-skip" (click)="skipOnboarding()">
-                  Pular por agora
                 </button>
               </div>
             </div>
@@ -198,10 +170,10 @@
                       </svg>
                     }
                   </button>
-                  <button type="button" class="btn-skip" (click)="skipOnboarding()">
-                    Pular por agora
-                  </button>
                 </div>
+                <button type="button" class="btn-link skip-btn" (click)="skipSetup()">
+                  Deixar para depois
+                </button>
               </form>
             </div>
           }
@@ -318,10 +290,10 @@
                       </svg>
                     }
                   </button>
-                  <button type="button" class="btn-skip" (click)="skipOnboarding()">
-                    Pular por agora
-                  </button>
                 </div>
+                <button type="button" class="btn-link skip-btn" (click)="skipSetup()">
+                  Deixar para depois
+                </button>
               </form>
             </div>
           }
@@ -598,221 +570,4 @@
           }
         </div>
       }
-    }
-  </main>
-</div>
-
-<!-- Modal Criar Organização -->
-@if (showCreateOrgModal()) {
-  <div class="modal-overlay" (click)="closeCreateOrgModal()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <button class="modal-close" (click)="closeCreateOrgModal()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18M6 6l12 12"/>
-        </svg>
-      </button>
-
-      @if (modalStep() === 'org') {
-        <div class="modal-header">
-          <div class="modal-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
-              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
-              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
-              <path d="M10 6h4"/>
-              <path d="M10 10h4"/>
-              <path d="M10 14h4"/>
-              <path d="M10 18h4"/>
-            </svg>
-          </div>
-          <h2>Criar Organização</h2>
-          <p>Uma organização agrupa suas equipes e recursos.</p>
-        </div>
-
-        <form class="modal-form" (ngSubmit)="createOrganizationFromModal()">
-          <input type="file" id="modalOrgLogoInput" accept="image/*" hidden (change)="onOrgLogoSelected($event)">
-
-          <div class="form-row-with-logo">
-            <div class="logo-preview" [class.has-image]="orgLogoPreview()" (click)="$event.stopPropagation()">
-              @if (orgLogoPreview()) {
-                <img [src]="orgLogoPreview()" alt="Logo preview">
-                <button type="button" class="remove-logo" (click)="removeOrgLogo(); $event.stopPropagation()">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                  </svg>
-                </button>
-              } @else {
-                <label for="modalOrgLogoInput" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="9" cy="9" r="2"/>
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                  </svg>
-                </label>
-              }
-            </div>
-            <div class="form-group flex-1">
-              <label for="modalOrgName">Nome da Organização *</label>
-              <input
-                type="text"
-                id="modalOrgName"
-                [ngModel]="orgName()"
-                (ngModelChange)="onOrgNameChange($event)"
-                name="modalOrgName"
-                placeholder="Ex: Minha Empresa"
-                required
-              >
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="modalOrgSlug">URL da Organização</label>
-            <div class="slug-input">
-              <span class="slug-prefix">stockhub.com/</span>
-              <input
-                type="text"
-                id="modalOrgSlug"
-                [ngModel]="orgSlug()"
-                (ngModelChange)="orgSlug.set($event)"
-                name="modalOrgSlug"
-                placeholder="minha-empresa"
-              >
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="modalOrgDescription">Descrição (opcional)</label>
-            <textarea
-              id="modalOrgDescription"
-              [ngModel]="orgDescription()"
-              (ngModelChange)="orgDescription.set($event)"
-              name="modalOrgDescription"
-              placeholder="Uma breve descrição da sua organização..."
-              maxlength="200"
-            ></textarea>
-            <span class="char-count">{{ orgDescription().length }}/200</span>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="closeCreateOrgModal()">Cancelar</button>
-            <button
-              type="submit"
-              class="btn-primary"
-              [disabled]="!orgName() || organizationService.isLoading()"
-            >
-              @if (organizationService.isLoading()) {
-                <div class="spinner"></div>
-                Criando...
-              } @else {
-                Continuar
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14"/>
-                  <path d="m12 5 7 7-7 7"/>
-                </svg>
-              }
-            </button>
-          </div>
-        </form>
-      }
-
-      @if (modalStep() === 'team') {
-        <div class="modal-header">
-          <div class="modal-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <h2>Criar Equipe</h2>
-          <p>Agora crie sua primeira equipe para gerenciar o estoque.</p>
-        </div>
-
-        <form class="modal-form" (ngSubmit)="createTeamFromModal()">
-          <input type="file" id="modalTeamLogoInput" accept="image/*" hidden (change)="onTeamLogoSelected($event)">
-
-          <div class="form-row-with-logo">
-            <div class="logo-preview" [class.has-image]="teamLogoPreview()" (click)="$event.stopPropagation()">
-              @if (teamLogoPreview()) {
-                <img [src]="teamLogoPreview()" alt="Logo preview">
-                <button type="button" class="remove-logo" (click)="removeTeamLogo(); $event.stopPropagation()">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                  </svg>
-                </button>
-              } @else {
-                <label for="modalTeamLogoInput" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <circle cx="9" cy="9" r="2"/>
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                  </svg>
-                </label>
-              }
-            </div>
-            <div class="form-group flex-1">
-              <label for="modalTeamName">Nome da Equipe *</label>
-              <input
-                type="text"
-                id="modalTeamName"
-                [ngModel]="teamName()"
-                (ngModelChange)="onTeamNameChange($event)"
-                name="modalTeamName"
-                placeholder="Ex: Equipe Principal"
-                required
-              >
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="modalTeamSlug">URL da Equipe</label>
-            <div class="slug-input">
-              <span class="slug-prefix">{{ orgSlug() }}/</span>
-              <input
-                type="text"
-                id="modalTeamSlug"
-                [ngModel]="teamSlug()"
-                (ngModelChange)="teamSlug.set($event)"
-                name="modalTeamSlug"
-                placeholder="equipe-principal"
-              >
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="modalTeamDescription">Descrição (opcional)</label>
-            <textarea
-              id="modalTeamDescription"
-              [ngModel]="teamDescription()"
-              (ngModelChange)="teamDescription.set($event)"
-              name="modalTeamDescription"
-              placeholder="Uma breve descrição da sua equipe..."
-              maxlength="200"
-            ></textarea>
-            <span class="char-count">{{ teamDescription().length }}/200</span>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="closeCreateOrgModal()">Cancelar</button>
-            <button
-              type="submit"
-              class="btn-primary"
-              [disabled]="!teamName() || teamService.isLoading()"
-            >
-              @if (teamService.isLoading()) {
-                <div class="spinner"></div>
-                Criando...
-              } @else {
-                Criar Equipe
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              }
-            </button>
-          </div>
-        </form>
-      }
-    </div>
-  </div>
 }

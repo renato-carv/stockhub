@@ -32,9 +32,8 @@ export class Sidebar {
   }
 
   logout() {
+    this.organizationService.clear();
+    this.teamService.clear();
     this.authService.logout();
-    this.organizationService.clearStorage();
-    this.teamService.clearStorage();
-    this.router.navigate(['/login']);
   }
 }

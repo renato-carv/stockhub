@@ -6,12 +6,13 @@ import { OrganizationService, CreateOrganizationDto } from '../../core/services/
 import { TeamService, CreateTeamDto } from '../../core/services/team.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { ToastService } from '../../core/services/toast.service';
+import { SetupRequired } from '../../shared/components/setup-required/setup-required';
 
-type OnboardingStep = 'welcome' | 'create-org' | 'create-team' | 'complete';
+type OnboardingStep = 'welcome' | 'create-org' | 'create-team' | 'complete' | 'skipped';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SetupRequired],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -20,7 +21,6 @@ export class Home implements OnInit {
   hasOrganization = computed(() => this.organizationService.organizations().length > 0);
   hasTeam = computed(() => this.teamService.teams().length > 0);
   showDashboard = computed(() => this.hasOrganization() && this.hasTeam());
-  skippedOnboarding = computed(() => this.organizationService.skippedOnboarding());
 
   // Onboarding state
   currentStep = signal<OnboardingStep>('welcome');
@@ -89,9 +89,10 @@ export class Home implements OnInit {
     this.currentStep.set('create-team');
   }
 
-  skipOnboarding(): void {
-    this.organizationService.setSkippedOnboarding(true);
+  skipSetup(): void {
+    this.currentStep.set('skipped');
   }
+
 
   // Slug generation
   generateSlug(name: string): string {
@@ -197,79 +198,11 @@ export class Home implements OnInit {
     }
   }
 
-  // Modal para criar organização (quando pulou onboarding)
-  showCreateOrgModal = signal(false);
-  modalStep = signal<'org' | 'team'>('org');
-
-  openCreateOrgModal(): void {
-    this.modalStep.set('org');
-    this.resetOrgForm();
-    this.showCreateOrgModal.set(true);
-  }
-
-  closeCreateOrgModal(): void {
-    this.showCreateOrgModal.set(false);
-    this.resetOrgForm();
-    this.resetTeamForm();
-  }
-
-  private resetOrgForm(): void {
-    this.orgName.set('');
-    this.orgSlug.set('');
-    this.orgDescription.set('');
-    this.removeOrgLogo();
-  }
-
-  private resetTeamForm(): void {
-    this.teamName.set('');
-    this.teamSlug.set('');
-    this.teamDescription.set('');
-    this.removeTeamLogo();
-  }
-
-  createOrganizationFromModal(): void {
-    const dto: CreateOrganizationDto = {
-      name: this.orgName(),
-      slug: this.orgSlug(),
-      description: this.orgDescription() || undefined,
-      logoUrl: this.orgLogoPreview() || undefined,
-    };
-
-    this.organizationService.create(dto).subscribe({
-      next: () => {
-        this.modalStep.set('team');
-        this.toastService.success('Organização criada', 'Agora crie sua equipe.');
-      },
-      error: () => {
-        this.toastService.error('Erro ao criar', 'Não foi possível criar a organização.');
-      },
-    });
-  }
-
-  createTeamFromModal(): void {
-    const orgId = this.organizationService.currentOrganization()?.id;
-    if (!orgId) return;
-
-    const dto: CreateTeamDto = {
-      name: this.teamName(),
-      slug: this.teamSlug(),
-      description: this.teamDescription() || undefined,
-      logoUrl: this.teamLogoPreview() || undefined,
-    };
-
-    this.teamService.create(orgId, dto).subscribe({
-      next: () => {
-        this.closeCreateOrgModal();
-        const teamId = this.teamService.currentTeam()?.id;
-        if (teamId) {
-          this.loadDashboard(teamId);
-        }
-        this.toastService.success('Equipe criada', 'Você já pode começar a usar o sistema.');
-      },
-      error: () => {
-        this.toastService.error('Erro ao criar', 'Não foi possível criar a equipe.');
-      },
-    });
+  onSetupCompleted(): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      this.loadDashboard(teamId);
+    }
   }
 
   // Dashboard helpers

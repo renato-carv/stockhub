@@ -1,12 +1,14 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { DashboardService, ABCAnalysis } from '../../core/services/dashboard.service';
 import { TeamService } from '../../core/services/team.service';
+import { OrganizationService } from '../../core/services/organization.service';
 import { ReportsService, ReportType } from '../../core/services/reports.service';
 import { TrendChart, TrendDataPoint } from '../../shared/components/trend-chart/trend-chart';
 import { ABCChart } from '../../shared/components/abc-chart/abc-chart';
+import { SetupRequired } from '../../shared/components/setup-required/setup-required';
 
 export interface ReportConfig {
   id: ReportType;
@@ -17,11 +19,18 @@ export interface ReportConfig {
 
 @Component({
   selector: 'app-reports',
-  imports: [CommonModule, FormsModule, TrendChart, ABCChart],
+  imports: [CommonModule, FormsModule, TrendChart, ABCChart, SetupRequired],
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
 export class Reports implements OnInit {
+  private organizationService = inject(OrganizationService);
+
+  // Verificar se setup está completo
+  isSetupComplete = computed(() => {
+    return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
+  });
+
   // Relatórios disponíveis
   reportTypes: ReportConfig[] = [
     {

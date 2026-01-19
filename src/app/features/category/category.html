@@ -1,3 +1,6 @@
+@if (!isSetupComplete()) {
+  <app-setup-required />
+} @else {
 <div class="categories-container">
   <!-- Header -->
   <div class="page-header">
@@ -762,4 +765,5 @@
     }
   </div>
 </div>
+}
 }

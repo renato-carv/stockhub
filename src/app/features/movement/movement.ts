@@ -10,17 +10,26 @@ import {
 } from '../../core/services/stock-movement.service';
 import { ProductService, Product } from '../../core/services/product.service';
 import { TeamService } from '../../core/services/team.service';
+import { OrganizationService } from '../../core/services/organization.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Pagination } from '../../shared/components/pagination/pagination';
 import { ExportToExcel } from '../../shared/components/export-to-excel/export-to-excel';
+import { SetupRequired } from '../../shared/components/setup-required/setup-required';
 
 @Component({
   selector: 'app-movement',
-  imports: [CommonModule, FormsModule, Pagination, ExportToExcel],
+  imports: [CommonModule, FormsModule, Pagination, ExportToExcel, SetupRequired],
   templateUrl: './movement.html',
   styleUrl: './movement.css',
 })
 export class Movement implements OnInit {
+  private organizationService = inject(OrganizationService);
+
+  // Verificar se setup está completo
+  isSetupComplete = computed(() => {
+    return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
+  });
+
   // Modal state
   showModal = signal(false);
   selectedMovement = signal<StockMovement | null>(null);
