@@ -79,7 +79,20 @@ export class Chat implements AfterViewChecked, OnDestroy {
   private loadSessions(): void {
     const teamId = this.teamService.currentTeam()?.id;
     if (teamId) {
-      this.chatService.loadSessions(teamId).subscribe();
+      this.chatService.loadSessions(teamId).subscribe({
+        next: (sessions) => {
+          if (sessions.length > 0) {
+            // Se já tem uma sessão selecionada, carrega as mensagens dela
+            const currentId = this.chatService.currentSessionId();
+            if (currentId) {
+              this.loadSession(currentId);
+            } else {
+              // Caso contrário, seleciona a primeira
+              this.loadSession(sessions[0].id);
+            }
+          }
+        },
+      });
     }
   }
 
