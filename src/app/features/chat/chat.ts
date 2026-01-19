@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { TeamService } from '../../core/services/team.service';
 import { OrganizationService } from '../../core/services/organization.service';
 import { ChatService } from '../../core/services/chat.service';
+import { ToastService } from '../../core/services/toast.service';
 import { SetupRequired } from '../../shared/components/setup-required/setup-required';
 
 export interface ChatMessage {
@@ -37,6 +38,7 @@ export class Chat implements AfterViewChecked, OnDestroy {
 
   private teamService = inject(TeamService);
   private organizationService = inject(OrganizationService);
+  private toastService = inject(ToastService);
 
   // Verificar se setup está completo
   isSetupComplete = computed(() => {
@@ -59,6 +61,7 @@ export class Chat implements AfterViewChecked, OnDestroy {
   showScrollButton = signal(false);
   sidebarCollapsed = signal(false);
   mobileSidebarOpen = signal(false);
+  showDeleteModal = signal(false);
   inputMessage = '';
 
   private shouldScroll = false;
@@ -111,6 +114,37 @@ export class Chat implements AfterViewChecked, OnDestroy {
   startNewChat(): void {
     this.chatService.startNewChat();
     this.messages.set([]);
+  }
+
+  openDeleteModal(): void {
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal.set(false);
+  }
+
+  confirmDeleteSession(): void {
+    const sessionId = this.chatService.currentSessionId();
+    const teamId = this.teamService.currentTeam()?.id;
+    if (!sessionId || !teamId) return;
+
+    this.chatService.deleteSession(teamId, sessionId).subscribe({
+      next: () => {
+        this.showDeleteModal.set(false);
+        this.messages.set([]);
+        this.toastService.success('Conversa excluída', 'A conversa foi excluída com sucesso.');
+        // Se ainda há sessões, carrega a primeira
+        const sessions = this.chatService.sessions();
+        if (sessions.length > 0) {
+          this.loadSession(sessions[0].id);
+        }
+      },
+      error: () => {
+        this.showDeleteModal.set(false);
+        this.toastService.error('Erro ao excluir', 'Não foi possível excluir a conversa.');
+      },
+    });
   }
 
   loadSession(sessionId: string): void {

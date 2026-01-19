@@ -181,4 +181,33 @@ export class ChatService {
   addSession(session: ChatSession): void {
     this.sessions.update((sessions) => [session, ...sessions]);
   }
+
+  /**
+   * Exclui uma sessão de chat
+   */
+  deleteSession(teamId: string, sessionId: string): Observable<void> {
+    return new Observable((subscriber) => {
+      fetch(`${this.apiUrl}/teams/${teamId}/chat/sessions/${sessionId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          // Remove da lista local
+          this.sessions.update((sessions) => sessions.filter((s) => s.id !== sessionId));
+          // Se era a sessão atual, limpa
+          if (this.currentSessionId() === sessionId) {
+            this.currentSessionId.set(null);
+          }
+          subscriber.next();
+          subscriber.complete();
+        })
+        .catch((err) => {
+          console.error('Erro ao excluir sessão:', err);
+          subscriber.error(err);
+        });
+    });
+  }
 }
