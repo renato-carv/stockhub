@@ -82,6 +82,11 @@ export class CategoryService {
 
           this.categories.set(allData);
 
+          // Se carregou com limit alto, também atualiza allCategories
+          if ((params?.limit ?? 10) >= 100) {
+            this.allCategories.set(allData);
+          }
+
           if (response.meta) {
             this.paginationMeta.set(response.meta);
           } else {

@@ -7,14 +7,13 @@ import {
   inject,
   OnDestroy,
   OnInit,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MarkdownComponent } from 'ngx-markdown';
 import { Subscription } from 'rxjs';
 import { TeamService } from '../../core/services/team.service';
-import { AiService } from '../../core/services/ai.service';
+import { ChatService } from '../../core/services/chat.service';
 
 export interface ChatMessage {
   id: string;
@@ -22,10 +21,6 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
 }
-
-// Mesma chave usada no chatbot flutuante
-const STORAGE_KEY = 'hubi_chat_history';
-const MAX_STORED_MESSAGES = 50;
 
 @Component({
   selector: 'app-chat',
@@ -38,30 +33,20 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('inputField') private inputField!: ElementRef<HTMLTextAreaElement>;
 
   private teamService = inject(TeamService);
-  private aiService = inject(AiService);
+  chatService = inject(ChatService);
   private chatSubscription: Subscription | null = null;
 
   isLoading = signal(false);
   messages = signal<ChatMessage[]>([]);
   showScrollButton = signal(false);
+  sidebarCollapsed = signal(false);
   inputMessage = '';
 
   private shouldScroll = false;
   private userScrolledUp = false;
 
-  constructor() {
-    // Salva no localStorage quando mensagens mudam
-    effect(() => {
-      const msgs = this.messages();
-      const teamId = this.teamService.currentTeam()?.id;
-      if (teamId && msgs.length > 0) {
-        this.saveToStorage(teamId, msgs);
-      }
-    });
-  }
-
   ngOnInit(): void {
-    this.loadFromStorage();
+    this.loadSessions();
   }
 
   ngAfterViewChecked(): void {
@@ -74,6 +59,64 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnDestroy(): void {
     this.chatSubscription?.unsubscribe();
+  }
+
+  private loadSessions(): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (teamId) {
+      this.chatService.loadSessions(teamId).subscribe();
+    }
+  }
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed.update((v) => !v);
+  }
+
+  startNewChat(): void {
+    this.chatService.startNewChat();
+    this.messages.set([]);
+  }
+
+  loadSession(sessionId: string): void {
+    const teamId = this.teamService.currentTeam()?.id;
+    if (!teamId) return;
+
+    this.chatService.loadSessionMessages(teamId, sessionId).subscribe({
+      next: (response) => {
+        const msgs: ChatMessage[] = response
+          .filter((m) => m.role !== 'SYSTEM')
+          .map((m) => ({
+            id: m.id,
+            role: m.role.toLowerCase() as 'user' | 'assistant',
+            content: m.content,
+            timestamp: new Date(m.createdAt),
+          }));
+        this.messages.set(msgs);
+        this.shouldScroll = true;
+      },
+      error: () => {
+        // Em caso de erro, apenas seleciona a sessão
+        this.chatService.currentSessionId.set(sessionId);
+        this.messages.set([]);
+      },
+    });
+  }
+
+  formatSessionDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      return 'Ontem';
+    } else if (diffDays < 7) {
+      return date.toLocaleDateString('pt-BR', { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
   }
 
   sendMessage(): void {
@@ -94,7 +137,7 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
     this.messages.update((msgs) => [...msgs, userMessage]);
     this.inputMessage = '';
     this.shouldScroll = true;
-    this.userScrolledUp = false; // Reset quando envia nova mensagem
+    this.userScrolledUp = false;
     this.isLoading.set(true);
     this.resetTextareaHeight();
 
@@ -113,30 +156,52 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
 
     // Call API with streaming
     let accumulatedContent = '';
+    const currentSessionId = this.chatService.currentSessionId() || undefined;
+    let newSessionId: string | null = null;
 
-    this.chatSubscription = this.aiService.chat(teamId, message).subscribe({
-      next: (chunk) => {
-        if (chunk.error) {
-          this.updateLastMessage('Desculpe, ocorreu um erro. Tente novamente.');
-          return;
-        }
-        accumulatedContent += chunk.content;
-        this.updateLastMessage(accumulatedContent);
-        // Só faz auto-scroll se o usuário não rolou para cima
-        if (!this.userScrolledUp) {
-          this.shouldScroll = true;
-        }
-      },
-      error: () => {
-        this.updateLastMessage(
-          'Desculpe, não foi possível conectar ao assistente. Verifique se o serviço está disponível.'
-        );
-        this.isLoading.set(false);
-      },
-      complete: () => {
-        this.isLoading.set(false);
-      },
-    });
+    this.chatSubscription = this.chatService
+      .sendMessageStream(teamId, message, currentSessionId)
+      .subscribe({
+        next: (chunk) => {
+          if (chunk.error) {
+            this.updateLastMessage('Desculpe, ocorreu um erro. Tente novamente.');
+            return;
+          }
+
+          // Captura sessionId da primeira resposta
+          if (chunk.sessionId && !newSessionId) {
+            newSessionId = chunk.sessionId;
+            this.chatService.currentSessionId.set(newSessionId);
+
+            // Adiciona à lista de sessões se for nova
+            if (!currentSessionId) {
+              this.chatService.addSession({
+                id: newSessionId,
+                title: message.substring(0, 50),
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+            }
+          }
+
+          accumulatedContent += chunk.content;
+          this.updateLastMessage(accumulatedContent);
+
+          if (!this.userScrolledUp) {
+            this.shouldScroll = true;
+          }
+        },
+        error: () => {
+          this.updateLastMessage(
+            'Desculpe, não foi possível conectar ao assistente. Verifique se o serviço está disponível.'
+          );
+          this.isLoading.set(false);
+        },
+        complete: () => {
+          this.isLoading.set(false);
+        },
+      });
   }
 
   sendSuggestion(text: string): void {
@@ -151,19 +216,12 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  clearChat(): void {
-    const teamId = this.teamService.currentTeam()?.id;
-    if (teamId) {
-      localStorage.removeItem(this.getStorageKey(teamId));
-    }
-    this.messages.set([]);
-  }
-
   onMessagesScroll(): void {
     if (this.messagesContainer) {
       const element = this.messagesContainer.nativeElement;
       const threshold = 100;
-      const isNearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
+      const isNearBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight < threshold;
       this.showScrollButton.set(!isNearBottom);
       this.userScrolledUp = !isNearBottom;
     }
@@ -192,7 +250,7 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
       const element = this.messagesContainer.nativeElement;
       element.scrollTo({
         top: element.scrollHeight,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }
   }
@@ -209,30 +267,5 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
     if (this.inputField) {
       this.inputField.nativeElement.style.height = 'auto';
     }
-  }
-
-  private getStorageKey(teamId: string): string {
-    return `${STORAGE_KEY}_${teamId}`;
-  }
-
-  private loadFromStorage(): void {
-    const teamId = this.teamService.currentTeam()?.id;
-    if (!teamId) return;
-
-    const stored = localStorage.getItem(this.getStorageKey(teamId));
-    if (stored) {
-      const parsed = JSON.parse(stored) as ChatMessage[];
-      const messages = parsed.map((msg) => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp),
-      }));
-      this.messages.set(messages);
-      this.shouldScroll = true;
-    }
-  }
-
-  private saveToStorage(teamId: string, messages: ChatMessage[]): void {
-    const toStore = messages.slice(-MAX_STORED_MESSAGES);
-    localStorage.setItem(this.getStorageKey(teamId), JSON.stringify(toStore));
   }
 }
