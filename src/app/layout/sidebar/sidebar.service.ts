@@ -5,6 +5,7 @@ import { Injectable, signal } from '@angular/core';
 })
 export class SidebarService {
   isCollapsed = signal(false);
+  isMobileOpen = signal(false);
 
   toggle() {
     this.isCollapsed.update((v) => !v);
@@ -16,5 +17,17 @@ export class SidebarService {
 
   expand() {
     this.isCollapsed.set(false);
+  }
+
+  toggleMobile() {
+    this.isMobileOpen.update((v) => !v);
+  }
+
+  openMobile() {
+    this.isMobileOpen.set(true);
+  }
+
+  closeMobile() {
+    this.isMobileOpen.set(false);
   }
 }

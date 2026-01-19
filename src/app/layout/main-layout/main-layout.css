@@ -1,6 +1,24 @@
 .layout {
   display: flex;
   min-height: 100vh;
+  position: relative;
+}
+
+/* Mobile overlay backdrop */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.mobile-overlay.active {
+  opacity: 1;
+  visibility: visible;
 }
 
 .main-wrapper {
@@ -26,6 +44,10 @@
 }
 
 @media (max-width: 768px) {
+  .mobile-overlay {
+    display: block;
+  }
+
   .main-wrapper {
     margin-left: 0;
   }

@@ -1,4 +1,11 @@
 <div class="layout">
+  <!-- Mobile overlay backdrop -->
+  <div
+    class="mobile-overlay"
+    [class.active]="sidebarService.isMobileOpen()"
+    (click)="sidebarService.closeMobile()"
+  ></div>
+
   <app-sidebar />
   <div class="main-wrapper" [class.expanded]="sidebarService.isCollapsed()">
     <app-header />

@@ -762,6 +762,70 @@
   opacity: 0.7;
 }
 
+/* ===================== MOBILE OVERLAY ===================== */
+.chat-mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 199;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.chat-mobile-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ===================== MOBILE HEADER ===================== */
+.chat-mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mobile-history-btn,
+.mobile-new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.mobile-history-btn:hover,
+.mobile-new-chat-btn:hover {
+  background: var(--background);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Desktop/Mobile visibility */
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none;
+}
+
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 900px) {
   .suggestion-cards {
@@ -785,15 +849,81 @@
   .chat-page {
     height: calc(100% + 2rem);
   }
+
+  /* Mobile overlay */
+  .chat-mobile-overlay {
+    display: block;
+  }
+
+  /* Mobile header */
+  .chat-mobile-header {
+    display: flex;
+  }
+
+  /* Desktop/Mobile visibility */
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
+
+  /* Sidebar oculta por padrão no mobile */
+  .chat-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+  }
+
+  .chat-sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Quando colapsada no mobile, continua escondida */
+  .chat-sidebar.collapsed {
+    width: 280px;
+    transform: translateX(-100%);
+  }
+
+  .chat-sidebar.collapsed.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Mostrar conteúdo mesmo quando collapsed no mobile */
+  .chat-sidebar.collapsed .new-chat-btn-sidebar {
+    display: flex;
+  }
+
+  .chat-sidebar.collapsed .sidebar-content {
+    display: block;
+  }
+
+  /* Chat main ocupa 100% */
+  .chat-main {
+    width: 100%;
+  }
+
+  /* Welcome screen adjustments */
+  .welcome-screen {
+    padding-top: 1rem;
+  }
 }
 
 @media (max-width: 600px) {
   .chat-sidebar {
-    width: 220px;
+    width: 260px;
   }
 
   .chat-sidebar.collapsed {
-    width: 56px;
+    width: 260px;
   }
 
   .welcome-screen {
@@ -819,5 +949,15 @@
   .suggestion-card {
     padding: 0.875rem;
     font-size: 0.8125rem;
+  }
+
+  .welcome-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .welcome-logo img {
+    width: 80px;
+    height: 80px;
   }
 }

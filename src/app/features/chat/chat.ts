@@ -58,6 +58,7 @@ export class Chat implements AfterViewChecked, OnDestroy {
   messages = signal<ChatMessage[]>([]);
   showScrollButton = signal(false);
   sidebarCollapsed = signal(false);
+  mobileSidebarOpen = signal(false);
   inputMessage = '';
 
   private shouldScroll = false;
@@ -84,6 +85,14 @@ export class Chat implements AfterViewChecked, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update((v) => !v);
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen.update((v) => !v);
+  }
+
+  closeMobileSidebar(): void {
+    this.mobileSidebarOpen.set(false);
   }
 
   startNewChat(): void {

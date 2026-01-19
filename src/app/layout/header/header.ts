@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ThemeToggle } from '../../shared/components/theme-toggle/theme-toggle';
 import { OrganizationService } from '../../core/services/organization.service';
 import { TeamService } from '../../core/services/team.service';
+import { SidebarService } from '../sidebar/sidebar.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -13,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 export class Header {
   protected organizationService = inject(OrganizationService);
   protected teamService = inject(TeamService);
+  protected sidebarService = inject(SidebarService);
 
   onOrganizationChange(orgId: string) {
     const org = this.organizationService.organizations().find((o) => o.id === orgId);
