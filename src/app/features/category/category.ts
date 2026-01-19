@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -24,12 +24,22 @@ interface ImportRow {
   templateUrl: './category.html',
   styleUrl: './category.css',
 })
-export class Category implements OnInit {
+export class Category {
   private organizationService = inject(OrganizationService);
+  private teamService = inject(TeamService);
 
   // Verificar se setup está completo
   isSetupComplete = computed(() => {
     return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
+  });
+
+  // Effect para recarregar dados quando currentTeam mudar
+  private teamEffect = effect(() => {
+    const team = this.teamService.currentTeam();
+    if (team) {
+      this.loadCategories();
+      this.categoryService.getAllForExport(team.id).subscribe();
+    }
   });
 
   // Modal state
@@ -98,20 +108,7 @@ export class Category implements OnInit {
   }
 
   private toastService = inject(ToastService);
-
-  constructor(
-    public categoryService: CategoryService,
-    public teamService: TeamService
-  ) {}
-
-  ngOnInit(): void {
-    this.loadCategories();
-    // Carrega todas as categorias para exportação
-    const teamId = this.teamService.currentTeam()?.id;
-    if (teamId) {
-      this.categoryService.getAllForExport(teamId).subscribe();
-    }
-  }
+  public categoryService = inject(CategoryService);
 
   private loadCategories(): void {
     const teamId = this.teamService.currentTeam()?.id;

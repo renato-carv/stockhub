@@ -7,7 +7,7 @@ import {
   AfterViewChecked,
   inject,
   OnDestroy,
-  OnInit,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -31,7 +31,7 @@ export interface ChatMessage {
   templateUrl: './chat.html',
   styleUrl: './chat.css',
 })
-export class Chat implements OnInit, AfterViewChecked, OnDestroy {
+export class Chat implements AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
   @ViewChild('inputField') private inputField!: ElementRef<HTMLTextAreaElement>;
 
@@ -42,6 +42,15 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
   isSetupComplete = computed(() => {
     return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
   });
+
+  // Effect para recarregar dados quando currentTeam mudar
+  private teamEffect = effect(() => {
+    const team = this.teamService.currentTeam();
+    if (team) {
+      this.loadSessions();
+    }
+  });
+
   chatService = inject(ChatService);
   private chatSubscription: Subscription | null = null;
 
@@ -53,10 +62,6 @@ export class Chat implements OnInit, AfterViewChecked, OnDestroy {
 
   private shouldScroll = false;
   private userScrolledUp = false;
-
-  ngOnInit(): void {
-    this.loadSessions();
-  }
 
   ngAfterViewChecked(): void {
     if (this.shouldScroll) {

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -23,12 +23,24 @@ export interface ReportConfig {
   templateUrl: './reports.html',
   styleUrl: './reports.css',
 })
-export class Reports implements OnInit {
+export class Reports {
   private organizationService = inject(OrganizationService);
+  private teamService = inject(TeamService);
+  private reportsService = inject(ReportsService);
+  public dashboardService = inject(DashboardService);
 
   // Verificar se setup está completo
   isSetupComplete = computed(() => {
     return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
+  });
+
+  // Effect para recarregar dados quando currentTeam mudar
+  private teamEffect = effect(() => {
+    const team = this.teamService.currentTeam();
+    if (team) {
+      this.setDefaultDateRange();
+      this.loadDashboardData();
+    }
   });
 
   // Relatórios disponíveis
@@ -78,17 +90,6 @@ export class Reports implements OnInit {
 
   // Computed signal for isGenerating from service
   isGenerating = computed(() => this.reportsService.isGenerating());
-
-  constructor(
-    public dashboardService: DashboardService,
-    public teamService: TeamService,
-    private reportsService: ReportsService
-  ) {}
-
-  ngOnInit(): void {
-    this.setDefaultDateRange();
-    this.loadDashboardData();
-  }
 
   private setDefaultDateRange(): void {
     const today = new Date();

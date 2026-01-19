@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -22,12 +22,21 @@ import { SetupRequired } from '../../shared/components/setup-required/setup-requ
   templateUrl: './movement.html',
   styleUrl: './movement.css',
 })
-export class Movement implements OnInit {
+export class Movement {
   private organizationService = inject(OrganizationService);
+  private teamService = inject(TeamService);
 
   // Verificar se setup está completo
   isSetupComplete = computed(() => {
     return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
+  });
+
+  // Effect para recarregar dados quando currentTeam mudar
+  private teamEffect = effect(() => {
+    const team = this.teamService.currentTeam();
+    if (team) {
+      this.loadData();
+    }
   });
 
   // Modal state
@@ -120,16 +129,8 @@ export class Movement implements OnInit {
   });
 
   private toastService = inject(ToastService);
-
-  constructor(
-    public movementService: StockMovementService,
-    public productService: ProductService,
-    public teamService: TeamService
-  ) {}
-
-  ngOnInit(): void {
-    this.loadData();
-  }
+  public movementService = inject(StockMovementService);
+  public productService = inject(ProductService);
 
   private loadData(): void {
     const teamId = this.teamService.currentTeam()?.id;

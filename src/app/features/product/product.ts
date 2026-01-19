@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -34,13 +34,23 @@ interface ImportRow {
   templateUrl: './product.html',
   styleUrl: './product.css',
 })
-export class Product implements OnInit {
+export class Product {
   private organizationService = inject(OrganizationService);
+  private teamService = inject(TeamService);
 
   // Verificar se setup está completo
   isSetupComplete = computed(() => {
     return this.organizationService.organizations().length > 0 && this.teamService.teams().length > 0;
   });
+
+  // Effect para recarregar dados quando currentTeam mudar
+  private teamEffect = effect(() => {
+    const team = this.teamService.currentTeam();
+    if (team) {
+      this.loadData();
+    }
+  });
+
   // Modal state
   showModal = signal(false);
   isEditing = signal(false);
@@ -138,16 +148,8 @@ export class Product implements OnInit {
   }
 
   private toastService = inject(ToastService);
-
-  constructor(
-    public productService: ProductService,
-    public teamService: TeamService,
-    public categoryService: CategoryService
-  ) {}
-
-  ngOnInit(): void {
-    this.loadData();
-  }
+  public productService = inject(ProductService);
+  public categoryService = inject(CategoryService);
 
   private loadData(): void {
     const teamId = this.teamService.currentTeam()?.id;

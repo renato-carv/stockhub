@@ -1,0 +1,326 @@
+@if (!isSetupComplete()) {
+  <app-setup-required />
+} @else {
+  <div class="settings-container">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Configurações</h1>
+        <p class="header-subtitle">Gerencie suas informações pessoais e segurança</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="settings-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'profile'"
+        (click)="setTab('profile')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Perfil
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'password'"
+        (click)="setTab('password')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Senha
+      </button>
+    </div>
+
+    <!-- Messages -->
+    @if (userService.error()) {
+      <div class="alert alert-error">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" x2="12" y1="8" y2="12"/>
+          <line x1="12" x2="12.01" y1="16" y2="16"/>
+        </svg>
+        {{ userService.error() }}
+      </div>
+    }
+
+    @if (userService.successMessage()) {
+      <div class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        {{ userService.successMessage() }}
+      </div>
+    }
+
+    <!-- Content -->
+    <div class="settings-content">
+      <!-- Profile Tab -->
+      @if (activeTab() === 'profile') {
+        <div class="settings-card">
+          <!-- Avatar Section -->
+          <div class="avatar-section">
+            <input
+              type="file"
+              #fileInput
+              accept="image/jpeg,image/png,image/gif"
+              (change)="onFileSelected($event)"
+              hidden
+            >
+            <div class="avatar-container" (click)="fileInput.click()">
+              <div class="user-avatar">
+                @if (avatarPreview()) {
+                  <img [src]="avatarPreview()" alt="Avatar Preview">
+                } @else if (authService.user()?.imageUrl) {
+                  <img [src]="authService.user()?.imageUrl" alt="Avatar">
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="5"/>
+                    <path d="M20 21a8 8 0 0 0-16 0"/>
+                  </svg>
+                }
+              </div>
+              <div class="avatar-overlay">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" x2="12" y1="3" y2="15"/>
+                </svg>
+              </div>
+            </div>
+            <div class="avatar-info">
+              <h3>Foto do Perfil</h3>
+              <p>JPG, PNG ou GIF. Tamanho máximo de 2MB.</p>
+              @if (avatarPreview() || authService.user()?.imageUrl) {
+                <div class="avatar-actions">
+                  <button type="button" class="btn-sm btn-secondary" (click)="removeAvatar()">
+                    Remover foto
+                  </button>
+                </div>
+              }
+              @if (avatarError()) {
+                <p class="avatar-error">{{ avatarError() }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="card-header">
+            <h2>Informações do Perfil</h2>
+            <p>Atualize suas informações pessoais</p>
+          </div>
+
+          <form class="settings-form" (ngSubmit)="updateProfile()">
+            <div class="form-group">
+              <label for="name">Nome completo</label>
+              <input
+                type="text"
+                id="name"
+                [ngModel]="profileName()"
+                (ngModelChange)="profileName.set($event)"
+                name="name"
+                placeholder="Seu nome completo"
+                minlength="3"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="email">E-mail</label>
+              <input
+                type="email"
+                id="email"
+                [value]="profileEmail()"
+                name="email"
+                disabled
+              >
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="!canSubmitProfile()"
+              >
+                @if (userService.isLoading()) {
+                  <div class="spinner"></div>
+                  Salvando...
+                } @else {
+                  Salvar Alterações
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Password Tab -->
+      @if (activeTab() === 'password') {
+        <div class="settings-card">
+          <div class="card-header">
+            <h2>Alterar Senha</h2>
+            <p>Mantenha sua conta segura atualizando sua senha regularmente</p>
+          </div>
+
+          <form class="settings-form" (ngSubmit)="updatePassword()">
+            <div class="form-group">
+              <label for="currentPassword">Senha atual</label>
+              <div class="input-with-icon">
+                <input
+                  [type]="showCurrentPassword() ? 'text' : 'password'"
+                  id="currentPassword"
+                  [ngModel]="currentPassword()"
+                  (ngModelChange)="currentPassword.set($event)"
+                  name="currentPassword"
+                  placeholder="Digite sua senha atual"
+                  required
+                >
+                <button type="button" class="toggle-password" (click)="toggleCurrentPassword()">
+                  @if (showCurrentPassword()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" x2="23" y1="1" y2="23"/>
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newPassword">Nova senha</label>
+              <div class="input-with-icon">
+                <input
+                  [type]="showNewPassword() ? 'text' : 'password'"
+                  id="newPassword"
+                  [ngModel]="newPassword()"
+                  (ngModelChange)="newPassword.set($event)"
+                  name="newPassword"
+                  placeholder="Digite sua nova senha"
+                  minlength="8"
+                  required
+                >
+                <button type="button" class="toggle-password" (click)="toggleNewPassword()">
+                  @if (showNewPassword()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" x2="23" y1="1" y2="23"/>
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+
+              @if (newPassword().length > 0) {
+                <div class="password-strength">
+                  <div class="strength-bar">
+                    <div
+                      class="strength-fill"
+                      [class]="getPasswordStrength().class"
+                      [style.width]="getPasswordStrength().width"
+                    ></div>
+                  </div>
+                  <span class="strength-label" [class]="getPasswordStrength().class">
+                    {{ getPasswordStrength().label }}
+                  </span>
+                </div>
+
+                <ul class="password-requirements">
+                  <li [class.valid]="newPassword().length >= 8">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Mínimo de 8 caracteres
+                  </li>
+                  <li [class.valid]="newPassword().match('[a-z]')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Uma letra minúscula
+                  </li>
+                  <li [class.valid]="newPassword().match('[A-Z]')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Uma letra maiúscula
+                  </li>
+                  <li [class.valid]="newPassword().match('[0-9]')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Um número
+                  </li>
+                  <li [class.valid]="newPassword().match('[@$!%*?&]')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Um caractere especial (@$!%*?&)
+                  </li>
+                </ul>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirmar nova senha</label>
+              <div class="input-with-icon">
+                <input
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  id="confirmPassword"
+                  [ngModel]="confirmPassword()"
+                  (ngModelChange)="confirmPassword.set($event)"
+                  name="confirmPassword"
+                  placeholder="Confirme sua nova senha"
+                  required
+                >
+                <button type="button" class="toggle-password" (click)="toggleConfirmPassword()">
+                  @if (showConfirmPassword()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" x2="23" y1="1" y2="23"/>
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  }
+                </button>
+              </div>
+
+              @if (confirmPassword().length > 0 && !passwordsMatch()) {
+                <span class="field-error">As senhas não coincidem</span>
+              }
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="!canSubmitPassword()"
+              >
+                @if (userService.isLoading()) {
+                  <div class="spinner"></div>
+                  Atualizando...
+                } @else {
+                  Atualizar Senha
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+}
