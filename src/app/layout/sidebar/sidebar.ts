@@ -27,6 +27,11 @@ export class Sidebar {
     return user?.name?.split(' ')[0] || 'Usuário';
   });
 
+  canViewTeams = computed(() => {
+    const team = this.teamService.currentTeam();
+    return team?.userRole === 'OWNER' || team?.userRole === 'ADMIN';
+  });
+
   toggleSidebar() {
     this.sidebarService.toggle();
   }

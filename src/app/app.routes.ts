@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/services/auth.guard';
 import { guestGuard } from './core/services/guest.guard';
+import { teamAdminGuard } from './core/services/team-admin.guard';
 
 export const routes: Routes = [
   // Landing page - accessible to everyone, redirects to /home if already logged in
@@ -35,6 +36,7 @@ export const routes: Routes = [
       { path: 'movements', loadComponent: () => import('./features/movement/movement').then((m) => m.Movement) },
       { path: 'reports', loadComponent: () => import('./features/reports/reports').then((m) => m.Reports) },
       { path: 'chat', loadComponent: () => import('./features/chat/chat').then((m) => m.Chat) },
+      { path: 'teams', loadComponent: () => import('./features/team/team').then((m) => m.Team), canActivate: [teamAdminGuard] },
       { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
     ],
   },

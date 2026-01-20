@@ -20,7 +20,16 @@ export class Header {
     const org = this.organizationService.organizations().find((o) => o.id === orgId);
     if (org) {
       this.organizationService.setCurrentOrganization(org);
-      this.teamService.getByOrganization(org.id).subscribe();
+      // Carregar equipes da nova organização e selecionar a primeira
+      this.teamService.getByOrganization(org.id).subscribe({
+        next: (teams) => {
+          if (teams.length > 0) {
+            this.teamService.setCurrentTeam(teams[0]);
+          } else {
+            this.teamService.currentTeam.set(null);
+          }
+        },
+      });
     }
   }
 

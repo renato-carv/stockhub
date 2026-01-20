@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -21,6 +21,14 @@ export class Home implements OnInit {
   hasOrganization = computed(() => this.organizationService.organizations().length > 0);
   hasTeam = computed(() => this.teamService.teams().length > 0);
   showDashboard = computed(() => this.hasOrganization() && this.hasTeam());
+
+  // Effect para recarregar dashboard quando a equipe mudar
+  private teamEffect = effect(() => {
+    const team = this.teamService.currentTeam();
+    if (team && this.showDashboard()) {
+      this.loadDashboard(team.id);
+    }
+  });
 
   // Onboarding state
   currentStep = signal<OnboardingStep>('welcome');
@@ -49,31 +57,12 @@ export class Home implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadUserData();
-  }
-
-  private loadUserData(): void {
-    this.organizationService.getAll().subscribe({
-      next: (orgs) => {
-        if (orgs.length > 0) {
-          const currentOrg = orgs[0];
-          this.organizationService.setCurrentOrganization(currentOrg);
-          this.loadTeams(currentOrg.id);
-        }
-      },
-    });
-  }
-
-  private loadTeams(orgId: string): void {
-    this.teamService.getByOrganization(orgId).subscribe({
-      next: (teams) => {
-        if (teams.length > 0) {
-          const currentTeam = teams[0];
-          this.teamService.setCurrentTeam(currentTeam);
-          this.loadDashboard(currentTeam.id);
-        }
-      },
-    });
+    // Os dados são carregados pelo MainLayout
+    // Apenas carrega o dashboard se já tiver equipe selecionada
+    const team = this.teamService.currentTeam();
+    if (team) {
+      this.loadDashboard(team.id);
+    }
   }
 
   private loadDashboard(teamId: string): void {
@@ -177,7 +166,6 @@ export class Home implements OnInit {
       name: this.teamName(),
       slug: this.teamSlug(),
       description: this.teamDescription() || undefined,
-      logoUrl: this.teamLogoPreview() || undefined,
     };
 
     this.teamService.create(orgId, dto).subscribe({

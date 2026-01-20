@@ -30,9 +30,19 @@ export class MainLayout implements OnInit {
     this.organizationService.getAll().subscribe({
       next: (orgs) => {
         if (orgs.length > 0) {
-          const currentOrg = this.organizationService.currentOrganization() || orgs[0];
-          this.organizationService.setCurrentOrganization(currentOrg);
-          this.loadTeams(currentOrg.id);
+          // Tentar recuperar a organização salva no localStorage
+          const savedOrgId = this.organizationService.getSavedOrgId();
+          let orgToSelect = orgs[0];
+
+          if (savedOrgId) {
+            const savedOrg = orgs.find((o) => o.id === savedOrgId);
+            if (savedOrg) {
+              orgToSelect = savedOrg;
+            }
+          }
+
+          this.organizationService.setCurrentOrganization(orgToSelect);
+          this.loadTeams(orgToSelect.id);
         }
       },
     });
@@ -42,8 +52,18 @@ export class MainLayout implements OnInit {
     this.teamService.getByOrganization(orgId).subscribe({
       next: (teams) => {
         if (teams.length > 0) {
-          const currentTeam = this.teamService.currentTeam() || teams[0];
-          this.teamService.setCurrentTeam(currentTeam);
+          // Tentar recuperar a equipe salva no localStorage
+          const savedTeamId = this.teamService.getSavedTeamId();
+          let teamToSelect = teams[0];
+
+          if (savedTeamId) {
+            const savedTeam = teams.find((t) => t.id === savedTeamId);
+            if (savedTeam) {
+              teamToSelect = savedTeam;
+            }
+          }
+
+          this.teamService.setCurrentTeam(teamToSelect);
         }
       },
     });

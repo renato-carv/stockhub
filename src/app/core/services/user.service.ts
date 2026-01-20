@@ -85,4 +85,10 @@ export class UserService {
     this.error.set(null);
     this.successMessage.set(null);
   }
+
+  findByEmail(email: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/by-email/${encodeURIComponent(email)}`, {
+      withCredentials: true,
+    });
+  }
 }
