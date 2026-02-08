@@ -4,12 +4,11 @@ import { guestGuard } from './core/services/guest.guard';
 import { teamAdminGuard } from './core/services/team-admin.guard';
 
 export const routes: Routes = [
-  // Landing page - accessible to everyone, redirects to /home if already logged in
+  // Landing page - accessible to everyone
   {
     path: '',
     pathMatch: 'full',
     loadComponent: () => import('./features/landing/landing').then((m) => m.Landing),
-    canActivate: [guestGuard],
   },
 
   // Public routes (guest only)

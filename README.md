@@ -1,59 +1,129 @@
 # StockHub
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.5.
+Sistema completo de gestão de estoque com assistente de IA integrado, desenvolvido como projeto de portfólio e aprendizado.
 
-## Development server
+![Angular](https://img.shields.io/badge/Angular-21-dd0031?logo=angular&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-e0234e?logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white)
 
-To start a local development server, run:
+## Screenshots
+
+<details>
+<summary>Landing Page</summary>
+
+![Landing](docs/screenshots/landing.jpeg)
+</details>
+
+<details>
+<summary>Dashboard</summary>
+
+![Dashboard](docs/screenshots/dashboard.jpeg)
+</details>
+
+<details>
+<summary>Produtos</summary>
+
+![Produtos](docs/screenshots/products.jpeg)
+</details>
+
+<details>
+<summary>Movimentações</summary>
+
+![Movimentações](docs/screenshots/movements.jpeg)
+</details>
+
+<details>
+<summary>Chat com IA (Hubi)</summary>
+
+![Chat](docs/screenshots/chat.jpeg)
+</details>
+
+## Funcionalidades
+
+- **Dashboard** - Visão geral com métricas, alertas de estoque baixo, atividade recente e resumo financeiro
+- **Produtos** - CRUD completo com importação/exportação em massa (Excel), código de barras, SKU e controle de estoque mínimo/máximo
+- **Movimentações** - Registro de entradas, saídas e ajustes com rastreabilidade (estoque anterior/novo) e histórico por usuário
+- **Categorias** - Organização de produtos com cores e importação/exportação
+- **Relatórios** - Análise ABC, tendências de estoque e exportação em PDF/Excel
+- **Chat com IA (Hubi)** - Assistente inteligente com streaming em tempo real que consulta dados do seu estoque
+- **Equipes** - Multi-tenancy com organizações, equipes e controle de permissões (Owner/Admin/Member)
+- **Autenticação** - Login com e-mail/senha, Google e GitHub, com refresh token automático
+- **Dark mode** - Tema claro e escuro
+
+## Stack
+
+### Frontend
+
+- **Angular 21** - Standalone Components + Signals
+- **TypeScript 5.9**
+- **Chart.js** - Gráficos e visualizações
+- **ngx-markdown** - Renderização de markdown nas respostas da IA
+- **Lucide** - Biblioteca de ícones
+- **xlsx / file-saver** - Exportação de planilhas
+
+### Backend
+
+- **NestJS** - Framework Node.js
+- **Prisma ORM** - Acesso ao banco de dados
+- **PostgreSQL** - Banco de dados relacional
+- **Server-Sent Events (SSE)** - Streaming de respostas da IA
+
+## Como rodar
+
+### Pre-requisitos
+
+- Node.js 18+
+- npm
+- PostgreSQL
+- Backend ([stockhub-api](link-do-repo-backend)) rodando em `http://localhost:4000`
+
+### Instalação
 
 ```bash
-ng serve
+# Clone o repositório
+git clone https://github.com/seu-usuario/stockhub.git
+
+# Instale as dependências
+cd stockhub
+npm install
+
+# Inicie o servidor de desenvolvimento
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+A aplicação estará disponível em `http://localhost:4200`.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Build
 
 ```bash
-ng generate component component-name
+npm run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Arquitetura
 
-```bash
-ng generate --help
+```
+src/app/
+├── core/
+│   ├── services/          # Serviços (auth, product, chat, etc.)
+│   ├── interceptors/      # Interceptor HTTP com refresh token
+│   └── guards/            # Guards de rota (auth, guest, team-admin)
+├── features/
+│   ├── landing/           # Landing page
+│   ├── login/             # Login
+│   ├── register/          # Registro
+│   ├── home/              # Dashboard
+│   ├── product/           # Gestão de produtos
+│   ├── category/          # Categorias
+│   ├── movement/          # Movimentações de estoque
+│   ├── reports/           # Relatórios
+│   ├── chat/              # Chat com IA
+│   ├── team/              # Gestão de equipes
+│   └── settings/          # Configurações
+├── shared/components/     # Componentes reutilizáveis
+└── layout/                # Layout principal (sidebar + header)
 ```
 
-## Building
+## Licenca
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Este projeto foi desenvolvido para fins de aprendizado e portfólio.
